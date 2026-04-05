@@ -378,73 +378,77 @@ const Room = () => {
         <motion.div className="absolute -bottom-20 -right-20 w-[30rem] h-[30rem] bg-purple-600/10 rounded-full blur-[120px]" />
       </div>
 
-      <motion.div 
-        className="h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-gray-200 dark:border-slate-800 flex flex-col shadow-2xl z-30 shrink-0"
-        animate={{ width: isSidebarExpanded ? 260 : 80 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        <motion.div 
+  className="h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-gray-200 dark:border-slate-800 flex flex-col shadow-2xl z-30 shrink-0"
+  animate={{ width: isSidebarExpanded ? 260 : 80 }}
+  transition={{ duration: 0.3, ease: "easeInOut" }}
+>
+  <div className="p-4 border-b border-gray-200 dark:border-slate-800">
+    <div onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className={`flex items-center gap-3 cursor-pointer group ${!isSidebarExpanded ? 'justify-center' : ''}`}>
+      <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/30 group-hover:bg-indigo-500 transition-all">
+        <Zap size={26} className="text-white fill-current" />
+      </div>
+      <motion.span
+        initial={false}
+        animate={{ opacity: isSidebarExpanded ? 1 : 0, width: isSidebarExpanded ? 'auto' : 0 }}
+        transition={{ duration: 0.2 }}
+        className="text-xl font-black tracking-tighter dark:text-white whitespace-nowrap overflow-hidden"
       >
-        <div className="p-4 border-b border-gray-200 dark:border-slate-800">
-          <div onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="flex items-center gap-3 cursor-pointer group">
-            <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/30 group-hover:bg-indigo-500 transition-all">
-              <Zap size={26} className="text-white fill-current" />
-            </div>
-            <motion.span
-              initial={false}
-              animate={{ opacity: isSidebarExpanded ? 1 : 0, width: isSidebarExpanded ? 'auto' : 0 }}
-              transition={{ duration: 0.2 }}
-              className="text-xl font-black tracking-tighter dark:text-white whitespace-nowrap overflow-hidden"
-            >
-              IGROGRAM
-            </motion.span>
+        IGROGRAM
+      </motion.span>
+    </div>
+  </div>
+
+  <div className="flex-1 flex flex-col py-6 space-y-2">
+    {sidebarTopItems.map((item) => {
+      const Icon = item.icon;
+      return (
+        <motion.button
+          key={item.id}
+          whileHover={{ scale: 1.02, x: 3 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={item.action}
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800"
+          style={{ justifyContent: isSidebarExpanded ? 'flex-start' : 'center' }}
+        >
+          <div style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon size={24} />
           </div>
-        </div>
-
-        {/* ТОЛЬКО ЭТОТ БЛОК ИЗМЕНЕН - добавлен justify-center */}
-        <div className="flex-1 flex flex-col justify-center py-6 space-y-2">
-          {sidebarTopItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <motion.button
-                key={item.id}
-                whileHover={{ scale: 1.02, x: 3 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={item.action}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800"
-              >
-                <Icon size={24} />
-                <motion.span
-                  initial={false}
-                  animate={{ opacity: isSidebarExpanded ? 1 : 0, width: isSidebarExpanded ? 'auto' : 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-xs font-black uppercase tracking-wider whitespace-nowrap overflow-hidden"
-                >
-                  {item.label}
-                </motion.span>
-              </motion.button>
-            );
-          })}
-        </div>
-
-        <div className="p-2 pb-4">
-          <motion.button
-            whileHover={{ scale: 1.02, x: 3 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleLogOut}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all cursor-pointer text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+          <motion.span
+            initial={false}
+            animate={{ opacity: isSidebarExpanded ? 1 : 0, width: isSidebarExpanded ? 'auto' : 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-xs font-black uppercase tracking-wider whitespace-nowrap overflow-hidden"
           >
-            <LogOut size={24} />
-            <motion.span
-              initial={false}
-              animate={{ opacity: isSidebarExpanded ? 1 : 0, width: isSidebarExpanded ? 'auto' : 0 }}
-              transition={{ duration: 0.2 }}
-              className="text-xs font-black uppercase tracking-wider whitespace-nowrap overflow-hidden"
-            >
-              ВЫХОД
-            </motion.span>
-          </motion.button>
-        </div>
-      </motion.div>
+            {item.label}
+          </motion.span>
+        </motion.button>
+      );
+    })}
+  </div>
 
+  <div className="p-2 pb-4">
+    <motion.button
+      whileHover={{ scale: 1.02, x: 3 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={handleLogOut}
+      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all cursor-pointer text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+      style={{ justifyContent: isSidebarExpanded ? 'flex-start' : 'center' }}
+    >
+      <div style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LogOut size={24} />
+      </div>
+      <motion.span
+        initial={false}
+        animate={{ opacity: isSidebarExpanded ? 1 : 0, width: isSidebarExpanded ? 'auto' : 0 }}
+        transition={{ duration: 0.2 }}
+        className="text-xs font-black uppercase tracking-wider whitespace-nowrap overflow-hidden"
+      >
+        ВЫХОД
+      </motion.span>
+    </motion.button>
+  </div>
+</motion.div>
       <div className="flex-1 flex overflow-hidden relative z-20">
         <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-r border-gray-200 dark:border-slate-800 flex flex-col shrink-0 h-full" style={{ width: '380px', minWidth: '380px' }}>
           <div className="p-4 border-b border-gray-200 dark:border-slate-800">
