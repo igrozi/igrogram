@@ -38,12 +38,6 @@ app.use(cors({
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Глобальный обработчик ошибок
-app.use((err, req, res, next) => {
-  console.error('Global error:', err);
-  res.status(500).json({ error: err.message || 'Internal server error' });
-});
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
@@ -91,6 +85,15 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('delete_message', (data) => {
+    console.log('Delete message event:', data);
+    if (data.chatId) {
+      io.to(`user_${data.chatId}`).emit('message_deleted', {
+        messageId: data.messageId
+      });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
@@ -99,5 +102,4 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`CORS origins: ${process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:3000,http://localhost'}`);
 });

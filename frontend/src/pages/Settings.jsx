@@ -239,7 +239,7 @@ const Settings = () => {
           </div>
           
           <div className="flex items-center justify-between mb-8 relative z-10">
-            <button onClick={() => navigate(-1)} className="p-2.5 bg-gray-100 dark:bg-slate-800 rounded-xl text-gray-500 hover:text-indigo-600 border-2 border-transparent hover:border-indigo-600 transition-all">
+            <button onClick={() => navigate(-1)} className="p-2.5 bg-gray-100 dark:bg-slate-800 rounded-xl text-gray-500 hover:text-indigo-600 border-2 border-transparent hover:border-indigo-600 transition-all mb-25">
               <ChevronLeft size={24}/>
             </button>
             <SectionHeader icon={Zap} text="НАСТРОЙКИ" />

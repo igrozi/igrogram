@@ -78,25 +78,50 @@ router.put('/read/:senderId', authenticate, async (req, res) => {
   }
 });
 
-// Удалить сообщение
+// Удалить сообщение - обновляем все ответы на него
 router.delete('/:messageId', authenticate, async (req, res) => {
   const { messageId } = req.params;
   const userId = req.userId;
   
+  const client = await pool.connect();
+  
   try {
-    const result = await pool.query(
-      'DELETE FROM messages WHERE id = $1 AND sender_id = $2 RETURNING id',
+    await client.query('BEGIN');
+    
+    // Проверяем, существует ли сообщение и принадлежит ли пользователю
+    const message = await client.query(
+      'SELECT id FROM messages WHERE id = $1 AND sender_id = $2',
       [messageId, userId]
     );
     
-    if (result.rows.length === 0) {
+    if (message.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ message: 'Message not found' });
     }
     
+    // Обновляем все сообщения, которые отвечают на это сообщение
+    await client.query(
+      `UPDATE messages 
+       SET reply_to_body = NULL,
+           reply_to_sender = NULL
+       WHERE reply_to = $1`,
+      [messageId]
+    );
+    
+    // Удаляем сообщение
+    await client.query(
+      'DELETE FROM messages WHERE id = $1',
+      [messageId]
+    );
+    
+    await client.query('COMMIT');
     res.json({ message: 'Message deleted' });
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error in deleteMessage:', error);
     res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -105,7 +130,6 @@ router.get('/chats/list', authenticate, async (req, res) => {
   const userId = req.userId;
   
   try {
-    // Сначала получаем всех пользователей, с которыми есть переписка
     const chatUsersResult = await pool.query(
       `SELECT DISTINCT 
          CASE 
@@ -123,7 +147,6 @@ router.get('/chats/list', authenticate, async (req, res) => {
       return res.json([]);
     }
     
-    // Получаем профили контактов
     const profilesResult = await pool.query(
       `SELECT id, user_id, username, name, avatar_url, is_online, last_seen
        FROM profiles
@@ -131,10 +154,8 @@ router.get('/chats/list', authenticate, async (req, res) => {
       [contactIds]
     );
     
-    // Для каждого контакта получаем последнее сообщение и количество непрочитанных
     const chats = await Promise.all(
       profilesResult.rows.map(async (contact) => {
-        // Получаем последнее сообщение
         const lastMsgResult = await pool.query(
           `SELECT id, body, image_url, created_at, sender_id, is_read
            FROM messages
@@ -145,7 +166,6 @@ router.get('/chats/list', authenticate, async (req, res) => {
           [userId, contact.user_id]
         );
         
-        // Получаем количество непрочитанных сообщений
         const unreadResult = await pool.query(
           `SELECT COUNT(*) as count
            FROM messages
@@ -159,19 +179,11 @@ router.get('/chats/list', authenticate, async (req, res) => {
         return {
           ...contact,
           unread_count: unreadCount,
-          last_message: lastMessage ? {
-            id: lastMessage.id,
-            body: lastMessage.body,
-            image_url: lastMessage.image_url,
-            created_at: lastMessage.created_at,
-            sender_id: lastMessage.sender_id,
-            is_read: lastMessage.is_read
-          } : null
+          last_message: lastMessage
         };
       })
     );
     
-    // Сортируем по дате последнего сообщения
     chats.sort((a, b) => {
       const dateA = a.last_message ? new Date(a.last_message.created_at) : new Date(0);
       const dateB = b.last_message ? new Date(b.last_message.created_at) : new Date(0);
