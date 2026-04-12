@@ -5,7 +5,7 @@ import { io } from 'socket.io-client';
 import { 
   Send, Search, LogOut, Sun, Moon, Paperclip, MessagesSquare, Zap, 
   Settings, X, Loader2, Check, CheckCheck, User, Trash2, Reply, 
-  Users, Phone, Archive, Globe, MessageCircle 
+  Users, Phone, Archive, Globe, MessageCircle, MoreVertical 
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,7 +27,7 @@ const formatLastSeen = (dateString) => {
   const isToday = date.toDateString() === now.toDateString();
   const timeOptions = { hour: '2-digit', minute: '2-digit' };
   const timeString = date.toLocaleTimeString('ru-RU', timeOptions);
-  if (isToday) return `Сегодня в ${timeString}`;
+  if (isToday) return `сегодня в ${timeString}`;
   const dateOptions = { day: 'numeric', month: 'short' };
   return `${date.toLocaleDateString('ru-RU', dateOptions)} в ${timeString}`;
 };
@@ -242,7 +242,6 @@ const Room = () => {
         imageUrl = uploadResult.url;
       }
       
-      // Правильная обработка ответа на изображение
       let replyText = null;
       if (replyingTo) {
         if (replyingTo.body) {
@@ -536,13 +535,14 @@ const Room = () => {
       </motion.div>
 
       <div className="flex-1 flex overflow-hidden relative z-20">
+        {/* Список диалогов */}
         <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-r border-gray-200 dark:border-slate-800 flex flex-col shrink-0 h-full" style={{ width: '380px', minWidth: '380px' }}>
           <div className="p-4 border-b border-gray-200 dark:border-slate-800">
             <div className="relative">
               {isSearching ? <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 animate-spin" size={18} /> : <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
               <input
                 type="text"
-                placeholder="ПОИСК ПОЛЬЗОВАТЕЛЕЙ ПО ИМЕНИ ИЛИ USERNAME..."
+                placeholder="ПОИСК ПОЛЬЗОВАТЕЛЕЙ..."
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-3.5 bg-gray-100 dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 outline-none focus:border-indigo-500 text-sm font-black tracking-wide"
@@ -561,14 +561,14 @@ const Room = () => {
                   <div
                     key={contact.id}
                     onClick={() => startChatWithUser(contact)}
-                    className={`flex items-center gap-3 px-4 py-4 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 ${
+                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 ${
                       selectedContact?.user_id === contact.user_id ? 'bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500' : ''
                     }`}
                   >
                     <div className="relative shrink-0">
                       <img
                         src={contact.avatar_url || `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`}
-                        className="w-14 h-14 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
+                        className="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
                         alt=""
                         onError={(e) => {
                           e.target.onerror = null;
@@ -578,12 +578,8 @@ const Room = () => {
                       {checkIsOnline(contact) && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-green-500"></div>}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="font-black text-base text-gray-900 dark:text-white truncate">{contact.name}</span>
-                      </div>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-indigo-500">@{contact.username}</span>
-                      </div>
+                      <span className="font-black text-base text-gray-900 dark:text-white truncate block">{contact.name}</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-indigo-500">@{contact.username}</span>
                     </div>
                   </div>
                 ))}
@@ -598,78 +594,81 @@ const Room = () => {
               <>
                 <div className="px-4 py-2.5 bg-gray-100 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 flex items-center gap-2 sticky top-0 z-10">
                   <MessageCircle size={14} className="text-indigo-600" />
-                  <span className="text-[9px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">ВАШИ ДИАЛОГИ • {recentChats.length}</span>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">ДИАЛОГИ • {recentChats.length}</span>
                 </div>
-                {recentChats.map(contact => (
-                  <div
-                    key={contact.id}
-                    onClick={() => { 
-                      setSelectedContact(contact); 
-                      setReplyingTo(null);
-                      markMessagesAsRead(contact.user_id);
-                    }}
-                    className={`flex items-center gap-3 px-4 py-4 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 ${
-                      selectedContact?.user_id === contact.user_id ? 'bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500' : ''
-                    }`}
-                  >
-                    <div className="relative shrink-0">
-                      <img
-                        src={contact.avatar_url || `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`}
-                        className="w-14 h-14 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
-                        alt=""
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`;
-                        }}
-                      />
-                      {checkIsOnline(contact) && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-green-500"></div>}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="font-black text-base text-gray-900 dark:text-white truncate">{contact.name}</span>
-                        {unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id && (
-                          <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
-                            {unreadCounts[contact.user_id]}
-                          </span>
-                        )}
+                {recentChats.map(contact => {
+                  const isUserOnline = checkIsOnline(contact);
+                  const lastMsg = contact.last_message;
+                  const lastMsgText = lastMsg?.body 
+                    ? (lastMsg.body.length > 40 ? lastMsg.body.substring(0, 40) + '...' : lastMsg.body)
+                    : (lastMsg?.image_url ? '📷 Изображение' : 'Нет сообщений');
+                  const lastMsgTime = lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                  
+                  return (
+                    <div
+                      key={contact.id}
+                      onClick={() => { 
+                        setSelectedContact(contact); 
+                        setReplyingTo(null);
+                        markMessagesAsRead(contact.user_id);
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 ${
+                        selectedContact?.user_id === contact.user_id ? 'bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500' : ''
+                      }`}
+                    >
+                      <div className="relative shrink-0">
+                        <img
+                          src={contact.avatar_url || `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`}
+                          className="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
+                          alt=""
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`;
+                          }}
+                        />
+                        {isUserOnline && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-green-500"></div>}
                       </div>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-indigo-500">@{contact.username}</span>
-                      </div>
-                      {contact.last_message && (
-                        <div className="mt-2">
-                          <p className={`text-xs font-bold truncate ${
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="font-black text-base text-gray-900 dark:text-white truncate">{contact.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-indigo-500">@{contact.username}</span>
+                        </div>
+                        {/* Время и текст сообщения на одной строке */}
+                        <div className="mt-1.5 flex items-center justify-between gap-2">
+                          <p className={`text-xs font-bold truncate flex-1 ${
                             unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id 
-                              ? 'text-gray-900 dark:text-white font-black' 
+                              ? 'text-gray-900 dark:text-white' 
                               : 'text-gray-500 dark:text-gray-400'
                           }`}>
-                            {contact.last_message.sender_id === user?.user_id ? `Вы: ` : ''}
-                            {contact.last_message.body 
-                              ? (contact.last_message.body.length > 35 
-                                  ? contact.last_message.body.substring(0, 35) + '...' 
-                                  : contact.last_message.body)
-                              : (contact.last_message.image_url ? '📷 Изображение' : 'Нет сообщений')}
+                            {lastMsg?.sender_id === user?.user_id ? `Вы: ${lastMsgText}` : lastMsgText}
                           </p>
-                          {contact.last_message.created_at && (
-                            <span className="text-[8px] font-black text-gray-400">
-                              {new Date(contact.last_message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          {lastMsgTime && (
+                            <span className="text-[9px] font-black text-gray-400 whitespace-nowrap shrink-0">
+                              {lastMsgTime}
                             </span>
                           )}
                         </div>
-                      )}
-                      {!checkIsOnline(contact) && !contact.last_message && (
-                        <div className="mt-1">
-                          <span className="text-[8px] font-black text-gray-400">{formatLastSeen(contact.last_seen)}</span>
-                        </div>
-                      )}
+                        {unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id && (
+                          <div className="mt-1 flex justify-end">
+                            <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
+                              {unreadCounts[contact.user_id]}
+                            </span>
+                          </div>
+                        )}
+                        {!isUserOnline && !lastMsg && (
+                          <p className="text-[9px] font-black text-gray-400 mt-1">{formatLastSeen(contact.last_seen)}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {recentChats.length === 0 && (
                   <div className="text-center text-gray-500 text-sm py-12 font-black">
                     <MessageCircle size={32} className="mx-auto mb-3 opacity-30" />
-                    НЕТ АКТИВНЫХ ДИАЛОГОВ
-                    <div className="text-[9px] mt-2 text-gray-400">ИСПОЛЬЗУЙТЕ ПОИСК, ЧТОБЫ НАЙТИ ДРУЗЕЙ</div>
+                    НЕТ ДИАЛОГОВ
+                    <div className="text-[9px] mt-2 text-gray-400">ИСПОЛЬЗУЙТЕ ПОИСК</div>
                   </div>
                 )}
               </>
@@ -677,14 +676,16 @@ const Room = () => {
           </div>
         </div>
 
+        {/* Область чата */}
         <div className="flex-1 flex flex-col bg-white/50 dark:bg-slate-900/50 h-full overflow-hidden">
           {selectedContact ? (
             <>
-              <div className="h-16 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-slate-800 shadow-sm shrink-0">
-                <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/profile/${selectedContact.username}`)}>
+              {/* Верхняя панель - увеличенная */}
+              <div className="h-20 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-slate-800 shadow-sm shrink-0">
+                <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate(`/profile/${selectedContact.username}`)}>
                   <img
                     src={selectedContact.avatar_url || `https://ui-avatars.com/api/?name=${selectedContact.name}&background=4f46e5&color=fff&size=128`}
-                    className="w-10 h-10 rounded-xl object-cover border-2 border-indigo-500"
+                    className="w-12 h-12 rounded-xl object-cover border-2 border-indigo-500"
                     alt=""
                     onError={(e) => {
                       e.target.onerror = null;
@@ -692,17 +693,21 @@ const Room = () => {
                     }}
                   />
                   <div>
-                    <h2 className="font-black text-base text-gray-900 dark:text-white">{selectedContact.name}</h2>
-                    <div className="flex items-center gap-1.5">
-                      <div className={`w-1.5 h-1.5 rounded-full ${checkIsOnline(selectedContact) ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <span className="text-[8px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <h2 className="font-black text-xl text-gray-900 dark:text-white">{selectedContact.name}</h2>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className={`w-1.5 h-1.5 rounded-full ${checkIsOnline(selectedContact) ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                      <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                         {checkIsOnline(selectedContact) ? 'В СЕТИ' : formatLastSeen(selectedContact.last_seen)}
                       </span>
                     </div>
                   </div>
                 </div>
+                <button className="p-2 rounded-xl text-gray-400 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+                  <MoreVertical size={22} />
+                </button>
               </div>
 
+              {/* Сообщения */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar flex flex-col">
                 <AnimatePresence>
                   {messages.map((msg) => {
@@ -724,7 +729,7 @@ const Room = () => {
                         className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} relative group`}
                         onContextMenu={(e) => handleContextMenu(e, msg)}
                       >
-                        <div className={`relative max-w-[85%] shadow-lg transition-all ${isMe ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-md ml-12' : 'bg-white border border-gray-200 text-gray-900 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 rounded-2xl rounded-tl-md mr-12'}`}>
+                        <div className={`relative max-w-[75%] shadow-lg transition-all ${isMe ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-md' : 'bg-white border border-gray-200 text-gray-900 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 rounded-2xl rounded-tl-md'}`}>
                           {msg.reply_to && (
                             <div className={`px-4 pt-2 pb-1 text-[10px] border-b ${isMe ? 'border-indigo-500' : 'border-gray-200 dark:border-slate-700'}`}>
                               <div className="flex items-center gap-1 mb-0.5">
@@ -749,7 +754,7 @@ const Room = () => {
                             </div>
                           )}
                           <div className="px-4 py-2 pb-5 relative min-w-[80px]">
-                            {msg.body && <p className="text-sm font-bold leading-relaxed whitespace-pre-wrap break-words">{msg.body}</p>}
+                            {msg.body && <p className="text-base font-medium leading-relaxed whitespace-pre-wrap break-words">{msg.body}</p>}
                             <div className="absolute bottom-1 right-2 flex items-center gap-1 opacity-60">
                               <span className="text-[8px] font-black">{new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                               {isMe && (msg.is_read ? <CheckCheck size={10} className="text-white" /> : <Check size={10} className="text-white/60" />)}
@@ -764,6 +769,7 @@ const Room = () => {
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* Блок ответа и ввода сообщения */}
               <div className="p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-gray-200 dark:border-slate-800 shrink-0">
                 <AnimatePresence>
                   {replyingTo && (
