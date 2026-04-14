@@ -84,7 +84,6 @@ const Auth = () => {
     
     setTagStatus({ loading: true, available: null, message: "Checking..." });
     
-    // Имитация проверки доступности username
     setTimeout(() => {
       const takenUsernames = ["admin", "user", "test", "root"];
       const isTaken = takenUsernames.includes(username.toLowerCase());
@@ -141,7 +140,7 @@ const Auth = () => {
   };
 
   const inputStyle = (color, isError = false) =>
-    `w-full bg-slate-950/50 text-white pl-12 pr-14 py-5 rounded-xl border-2 ${isError ? "border-red-500/50" : "border-slate-800"} focus:border-${color}-500 outline-none transition-all font-mono font-black text-lg shadow-inner tracking-tight placeholder:font-sans placeholder:font-black placeholder:text-[13px] placeholder:tracking-[0.2em] placeholder:text-slate-600 placeholder:uppercase`;
+    `w-full bg-slate-950/50 text-white pl-10 pr-12 py-3.5 md:py-5 rounded-xl border-2 ${isError ? "border-red-500/50" : "border-slate-800"} focus:border-${color}-500 outline-none transition-all font-mono font-black text-base md:text-lg shadow-inner tracking-tight placeholder:font-sans placeholder:font-black placeholder:text-[10px] md:placeholder:text-[13px] placeholder:tracking-[0.2em] placeholder:text-slate-600 placeholder:uppercase`;
 
   const titleVariants = {
     hidden: { y: 10, opacity: 0 },
@@ -149,7 +148,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 relative overflow-hidden text-white font-sans">
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-3 md:p-4 relative overflow-hidden text-white font-sans">
       <AnimatePresence mode="wait">
         <motion.div
           key={isLogin ? "bg-indigo" : "bg-emerald"}
@@ -161,23 +160,23 @@ const Auth = () => {
           <motion.div
             animate={{ scale: [1, 1.1, 1], rotate: isLogin ? [0, 5, 0] : [0, -5, 0] }}
             transition={{ duration: 15, repeat: Infinity }}
-            className={`absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 ${isLogin ? "bg-indigo-600" : "bg-emerald-600"}`}
+            className={`absolute top-[-20%] left-[-10%] w-[400px] md:w-[600px] h-[400px] md:h-[600px] rounded-full blur-[120px] opacity-20 ${isLogin ? "bg-indigo-600" : "bg-emerald-600"}`}
           />
         </motion.div>
       </AnimatePresence>
 
-      <motion.div layout className="w-full max-w-md z-10">
-        <div className="bg-slate-900/80 backdrop-blur-3xl border-[2px] border-white/5 p-10 rounded-[2.5rem] shadow-[0_0_80px_rgba(0,0,0,0.6)] relative overflow-hidden transition-all duration-500">
+      <motion.div layout className="w-full max-w-[380px] md:max-w-md z-10 px-2">
+        <div className="bg-slate-900/80 backdrop-blur-3xl border-[2px] border-white/5 p-5 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-[0_0_80px_rgba(0,0,0,0.6)] relative overflow-hidden transition-all duration-500">
           <AnimatePresence mode="wait">
-            <motion.div key={isLogin ? "login-head" : "reg-head"} initial="hidden" animate="visible" transition={{ staggerChildren: 0.05 }} className="flex flex-col items-center mb-8">
+            <motion.div key={isLogin ? "login-head" : "reg-head"} initial="hidden" animate="visible" transition={{ staggerChildren: 0.05 }} className="flex flex-col items-center mb-5 md:mb-8">
               <motion.div
                 animate={{ boxShadow: isLogin ? ["0 0 15px #6366f140", "0 0 30px #6366f180", "0 0 15px #6366f140"] : ["0 0 15px #10b98140", "0 0 30px #10b98180", "0 0 15px #10b98140"] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className={`p-4 rounded-xl mb-4 border-2 ${isLogin ? "bg-indigo-600 border-indigo-400" : "bg-emerald-600 border-emerald-400"}`}
+                className={`p-3 md:p-4 rounded-xl mb-3 md:mb-4 border-2 ${isLogin ? "bg-indigo-600 border-indigo-400" : "bg-emerald-600 border-emerald-400"}`}
               >
-                <Zap className="text-white fill-current" size={24} />
+                <Zap className="text-white fill-current" size={20} />
               </motion.div>
-              <h1 className="text-5xl font-black tracking-tighter uppercase flex">
+              <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase flex">
                 {"IGRO".split("").map((char, i) => (<motion.span key={i} variants={titleVariants}>{char}</motion.span>))}
                 <span className={isLogin ? "text-indigo-500" : "text-emerald-500"}>
                   {"GRAM".split("").map((char, i) => (<motion.span key={i} variants={titleVariants}>{char}</motion.span>))}
@@ -187,21 +186,21 @@ const Auth = () => {
             </motion.div>
           </AnimatePresence>
 
-          <form onSubmit={handleSubmit} className="space-y-6 relative">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 relative">
             <AnimatePresence mode="popLayout">
               {!isLogin && (
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="grid grid-cols-2 gap-4 mb-8">
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-3 md:space-y-4 mb-5 md:mb-8">
                   <div className="relative group">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500/50 group-focus-within:text-emerald-500" size={20} />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500/50 group-focus-within:text-emerald-500" size={18} />
                     <input type="text" value={data.name} placeholder="Name" required className={inputStyle("emerald")} onChange={(e) => setData({ ...data, name: e.target.value })} />
                   </div>
                   <div className="relative group">
-                    <AtSign className={`absolute left-4 top-1/2 -translate-y-1/2 ${tagStatus.available === false ? "text-red-500" : "text-emerald-500/50"}`} size={20} />
+                    <AtSign className={`absolute left-3 top-1/2 -translate-y-1/2 ${tagStatus.available === false ? "text-red-500" : "text-emerald-500/50"}`} size={18} />
                     <input type="text" value={data.username} placeholder="Tag" required className={inputStyle("emerald", tagStatus.available === false)} onChange={(e) => setData({ ...data, username: e.target.value })} />
                     <div className="absolute -bottom-5 left-4 h-3">
                       <AnimatePresence>
                         {tagStatus.message && (
-                          <motion.span initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`text-[7px] font-black uppercase tracking-tighter block ${tagStatus.available ? "text-emerald-400" : "text-red-500"}`}>{tagStatus.message}</motion.span>
+                          <motion.span initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`text-[7px] md:text-[8px] font-black uppercase tracking-tighter block ${tagStatus.available ? "text-emerald-400" : "text-red-500"}`}>{tagStatus.message}</motion.span>
                         )}
                       </AnimatePresence>
                     </div>
@@ -211,15 +210,15 @@ const Auth = () => {
             </AnimatePresence>
 
             <div className="relative group">
-              <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${!isLogin && emailStatus.valid === false ? "text-red-500" : isLogin ? "text-indigo-400/50" : "text-emerald-400/50"}`} size={20} />
+              <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${!isLogin && emailStatus.valid === false ? "text-red-500" : isLogin ? "text-indigo-400/50" : "text-emerald-400/50"}`} size={18} />
               <input type="email" value={data.email} placeholder="Email" required className={inputStyle(isLogin ? "indigo" : "emerald", !isLogin && emailStatus.valid === false)} onChange={(e) => setData({ ...data, email: e.target.value })} />
             </div>
 
             <div className="relative group">
-              <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 ${isLogin ? "text-indigo-400/50" : !isLogin && passStatus.valid === false ? "text-red-500" : "text-emerald-400/50"}`} size={20} />
+              <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 ${isLogin ? "text-indigo-400/50" : !isLogin && passStatus.valid === false ? "text-red-500" : "text-emerald-400/50"}`} size={18} />
               <input type={showPassword ? "text" : "password"} value={data.password} placeholder="Password" required className={inputStyle(isLogin ? "indigo" : "emerald", !isLogin && passStatus.valid === false)} onChange={(e) => setData({ ...data, password: e.target.value })} />
-              <motion.button whileTap={{ scale: 0.8 }} type="button" onClick={() => setShowPassword(!showPassword)} className={`absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg border transition-all duration-300 cursor-pointer ${isLogin ? "border-indigo-500/20 text-indigo-400/40 hover:text-indigo-400 hover:border-indigo-500/60 hover:bg-indigo-500/10" : "border-emerald-500/20 text-emerald-400/40 hover:text-emerald-400 hover:border-emerald-500/60 hover:bg-emerald-500/10"}`}>
-                {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
+              <motion.button whileTap={{ scale: 0.8 }} type="button" onClick={() => setShowPassword(!showPassword)} className={`absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg border transition-all duration-300 cursor-pointer ${isLogin ? "border-indigo-500/20 text-indigo-400/40 hover:text-indigo-400 hover:border-indigo-500/60 hover:bg-indigo-500/10" : "border-emerald-500/20 text-emerald-400/40 hover:text-emerald-400 hover:border-emerald-500/60 hover:bg-emerald-500/10"}`}>
+                {showPassword ? <EyeOff size={16} strokeWidth={2.5} /> : <Eye size={16} strokeWidth={2.5} />}
               </motion.button>
               {!isLogin && (
                 <>
@@ -229,7 +228,7 @@ const Auth = () => {
                   <div className="absolute -bottom-5 left-4 h-3">
                     <AnimatePresence>
                       {data.password && (
-                        <motion.span initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`text-[7px] font-black uppercase tracking-tighter block ${passStatus.valid ? "text-emerald-400" : "text-red-400"}`}>{passStatus.message}</motion.span>
+                        <motion.span initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`text-[7px] md:text-[8px] font-black uppercase tracking-tighter block ${passStatus.valid ? "text-emerald-400" : "text-red-400"}`}>{passStatus.message}</motion.span>
                       )}
                     </AnimatePresence>
                   </div>
@@ -240,18 +239,18 @@ const Auth = () => {
             <div className="h-4 flex items-center justify-center">
               <AnimatePresence>
                 {error && (
-                  <motion.p initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-red-400 text-[9px] font-black uppercase text-center bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20 w-full">{error}</motion.p>
+                  <motion.p initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-red-400 text-[8px] md:text-[9px] font-black uppercase text-center bg-red-500/10 px-2 md:px-3 py-1 rounded-lg border border-red-500/20 w-full">{error}</motion.p>
                 )}
               </AnimatePresence>
             </div>
 
-            <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} type="submit" disabled={loading} className={`w-full py-5 rounded-xl font-black text-lg uppercase tracking-[0.2em] border-b-[6px] transition-all active:border-b-[2px] shadow-xl cursor-pointer disabled:cursor-not-allowed ${isLogin ? "bg-indigo-600 border-indigo-900 text-white" : "bg-emerald-600 border-emerald-900 text-white"}`}>
+            <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} type="submit" disabled={loading} className={`w-full py-3.5 md:py-5 rounded-xl font-black text-base md:text-lg uppercase tracking-[0.2em] border-b-[6px] transition-all active:border-b-[2px] shadow-xl cursor-pointer disabled:cursor-not-allowed ${isLogin ? "bg-indigo-600 border-indigo-900 text-white" : "bg-emerald-600 border-emerald-900 text-white"}`}>
               {loading ? "..." : isLogin ? "Sign In" : "Create Account"}
             </motion.button>
           </form>
 
-          <div className="mt-8 text-center">
-            <button onClick={toggleMode} className={`font-black uppercase tracking-[0.2em] text-[12px] pb-1 border-b-2 transition-all cursor-pointer ${isLogin ? "text-slate-500 border-transparent hover:text-indigo-400 hover:border-indigo-400" : "text-slate-500 border-transparent hover:text-emerald-400 hover:border-emerald-400"}`}>
+          <div className="mt-5 md:mt-8 text-center">
+            <button onClick={toggleMode} className={`font-black uppercase tracking-[0.2em] text-[10px] md:text-[12px] pb-1 border-b-2 transition-all cursor-pointer ${isLogin ? "text-slate-500 border-transparent hover:text-indigo-400 hover:border-indigo-400" : "text-slate-500 border-transparent hover:text-emerald-400 hover:border-emerald-400"}`}>
               {isLogin ? "Dont have account? Register" : "Already registered? Sign In"}
             </button>
           </div>

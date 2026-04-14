@@ -7,7 +7,7 @@ import {
   ChevronLeft, Save, User, Bell, ShieldCheck, Mail, Lock, 
   Camera, Eye, EyeOff, Zap, LogOut, Sun, Moon, CheckCircle, 
   Loader2, Activity, Shield, Key, Phone, LockKeyhole, Pencil, 
-  X, Fingerprint, Cpu, Layers, Globe
+  X, Fingerprint, Cpu, Layers, Globe, Menu, ArrowLeft
 } from 'lucide-react';
 
 const heartBeat = { scale: [1, 1.2, 1], transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" } };
@@ -45,11 +45,11 @@ const AnimatedTitle = ({ text }) => (
 );
 
 const SectionHeader = ({ icon: Icon, text, animate = heartBeat }) => (
-  <div className="flex items-center gap-4 mb-10 relative z-10">
-    <motion.div animate={animate} className="bg-indigo-600 p-2.5 rounded-2xl shadow-[0_0_20px_rgba(79,70,229,0.5)]">
-      <Icon size={24} className="text-white fill-current" />
+  <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-10 relative z-10">
+    <motion.div animate={animate} className="bg-indigo-600 p-2 md:p-2.5 rounded-xl md:rounded-2xl shadow-[0_0_20px_rgba(79,70,229,0.5)]">
+      <Icon size={20} className="md:size-6 text-white fill-current" />
     </motion.div>
-    <div className="text-2xl font-black text-gray-900 dark:text-white tracking-widest uppercase">
+    <div className="text-lg md:text-2xl font-black text-gray-900 dark:text-white tracking-widest uppercase">
       <AnimatedTitle text={text} />
     </div>
   </div>
@@ -67,6 +67,8 @@ const Settings = () => {
   const [showPass, setShowPass] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [passwordError, setPasswordError] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const [profile, setProfile] = useState({
     name: '',
@@ -84,6 +86,12 @@ const Settings = () => {
     currentPassword: '',
     newEmail: ''
   });
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -154,7 +162,6 @@ const Settings = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     
-    // Проверка совпадения паролей
     if (secureData.newPassword && secureData.newPassword !== secureData.confirmPassword) {
       setPasswordError('Пароли не совпадают');
       setActiveNotification({ type: 'error', message: 'PASSWORDS DO NOT MATCH' });
@@ -195,6 +202,234 @@ const Settings = () => {
 
   if (!user) return null;
 
+  // Mobile version
+  if (isMobile) {
+    return (
+      <div className={`min-h-screen ${darkMode ? 'dark bg-[#020617]' : 'bg-gray-100'} pb-20`}>
+        <style>{`
+          @keyframes gradientShift { 
+            0% { background-position: 0% 50%; } 
+            50% { background-position: 100% 50%; } 
+            100% { background-position: 0% 50%; } 
+          }
+          .animated-bg { 
+            position: fixed; 
+            inset: 0; 
+            z-index: 0; 
+            background: ${darkMode ? 'linear-gradient(-45deg, #020617, #1e1b4b, #0f172a, #020617)' : 'linear-gradient(-45deg, #f3f4f6, #e5e7eb, #d1d5db, #f3f4f6)'}; 
+            background-size: 400% 400%; 
+            animation: gradientShift 15s ease infinite; 
+            opacity: 0.8; 
+          }
+        `}</style>
+        <div className="animated-bg" />
+
+        <AnimatePresence>
+          {activeNotification && (
+            <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 20 }} exit={{ opacity: 0 }} className="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none px-4">
+              <div className={`backdrop-blur-xl border-4 rounded-3xl p-3 shadow-2xl flex items-center gap-3 max-w-sm w-full bg-white/90 dark:bg-slate-900/90 ${activeNotification.type === 'success' ? 'border-green-500 text-green-500' : 'border-red-500 text-red-500'}`}>
+                {activeNotification.type === 'success' ? <CheckCircle size={16} /> : <Shield size={16} />}
+                <p className="text-xs font-bold uppercase tracking-widest">{activeNotification.message}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Header */}
+        <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate(-1)} className="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl">
+              <ArrowLeft size={20} className="dark:text-white" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-indigo-600 rounded-xl">
+                <Zap size={18} className="text-white" />
+              </div>
+              <span className="text-lg font-black uppercase tracking-wider dark:text-white">НАСТРОЙКИ</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 px-4 py-4 space-y-4">
+          {/* Profile Card */}
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-[2rem] p-6 text-center">
+            <input type="file" ref={fileInputRef} onChange={handleAvatarChange} className="hidden" accept="image/*" />
+            <motion.div whileTap={{ scale: 0.95 }} onClick={() => fileInputRef.current.click()} className="relative w-24 h-24 mx-auto mb-4 cursor-pointer">
+              <div className="w-full h-full rounded-[1.5rem] border-4 border-indigo-600 p-1 overflow-hidden bg-gray-200 dark:bg-slate-800">
+                {avatarLoading ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Loader2 className="animate-spin text-white" size={24} />
+                  </div>
+                ) : (
+                  <img 
+                    src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.name || 'User'}&background=4f46e5&color=fff&size=512`} 
+                    className="w-full h-full object-cover rounded-[1.25rem]" 
+                    alt="Avatar"
+                  />
+                )}
+              </div>
+            </motion.div>
+            <h2 className="text-xl font-black dark:text-white">{profile.name || 'User'}</h2>
+            <p className="text-indigo-600 dark:text-indigo-400 font-bold text-xs tracking-widest">@{profile.username}</p>
+          </div>
+
+          {/* Theme Toggle */}
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {darkMode ? <Moon size={18} className="text-indigo-600" /> : <Sun size={18} className="text-indigo-600" />}
+              <span className="text-sm font-black uppercase dark:text-white">{darkMode ? 'НОЧЬ' : 'ДЕНЬ'}</span>
+            </div>
+            <div onClick={() => setDarkMode(!darkMode)} className={`w-12 h-7 flex items-center rounded-full p-1 cursor-pointer ${darkMode ? 'bg-indigo-600' : 'bg-gray-300'}`}>
+              <motion.div layout className="bg-white w-5 h-5 rounded-full shadow-lg" animate={{ x: darkMode ? 20 : 0 }} />
+            </div>
+          </div>
+
+          {/* Notifications Toggle */}
+          <div onClick={() => setProfile({...profile, notifications: !profile.notifications})} className={`bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-2 rounded-2xl p-4 flex items-center justify-between cursor-pointer ${profile.notifications ? 'border-indigo-600 bg-indigo-600/5' : 'border-gray-200 dark:border-slate-800'}`}>
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-xl ${profile.notifications ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-500'}`}>
+                <Bell size={16} />
+              </div>
+              <span className="text-sm font-black uppercase dark:text-white">УВЕДОМЛЕНИЯ</span>
+            </div>
+            <div className={`w-10 h-6 rounded-full p-1 ${profile.notifications ? 'bg-indigo-600' : 'bg-gray-300'}`}>
+              <motion.div animate={{ x: profile.notifications ? 16 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-lg" />
+            </div>
+          </div>
+
+          {/* Personal Data */}
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-2xl p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <User size={18} className="text-indigo-600" />
+              <span className="text-sm font-black uppercase dark:text-white">ЛИЧНЫЕ ДАННЫЕ</span>
+            </div>
+            
+            <input 
+              type="text" 
+              value={profile.name} 
+              onChange={e => setProfile({...profile, name: e.target.value})} 
+              placeholder="Имя"
+              className="w-full bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-3 rounded-xl font-bold text-sm dark:text-white"
+            />
+            
+            <input 
+              type="text" 
+              value={profile.phone} 
+              onChange={e => setProfile({...profile, phone: formatPhoneNumber(e.target.value)})} 
+              placeholder="+7 (___) ___-__"
+              className="w-full bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-3 rounded-xl font-bold text-sm dark:text-white"
+            />
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-black uppercase text-gray-500">ПОЧТА</span>
+                <button 
+                  type="button" 
+                  onClick={() => { setEditingEmail(!editingEmail); if(!editingEmail) setSecureData({...secureData, newEmail: secureData.email}); }} 
+                  className={`text-xs font-black uppercase ${editingEmail ? 'text-red-500' : 'text-indigo-600'}`}
+                >
+                  {editingEmail ? 'CANCEL' : 'EDIT'}
+                </button>
+              </div>
+              <input 
+                type="email" 
+                value={editingEmail ? secureData.newEmail : secureData.email} 
+                onChange={e => setSecureData({...secureData, newEmail: e.target.value})} 
+                readOnly={!editingEmail} 
+                className={`w-full p-3 rounded-xl font-bold text-sm border ${editingEmail ? 'bg-white dark:bg-slate-800 border-indigo-600' : 'bg-gray-100/50 dark:bg-slate-800/50 border-gray-200 text-gray-500'}`} 
+              />
+            </div>
+          </div>
+
+          {/* Security */}
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-2xl p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <Shield size={18} className="text-indigo-600" />
+              <span className="text-sm font-black uppercase dark:text-white">БЕЗОПАСНОСТЬ</span>
+            </div>
+
+            <div className="relative">
+              <input 
+                type={showPass ? "text" : "password"} 
+                value={secureData.newPassword} 
+                onChange={e => setSecureData({...secureData, newPassword: e.target.value})} 
+                placeholder="Новый пароль"
+                className="w-full bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-3 pr-12 rounded-xl font-bold text-sm dark:text-white"
+              />
+              <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2">
+                {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            {secureData.newPassword && (
+              <div>
+                <input 
+                  type={showPass ? "text" : "password"} 
+                  value={secureData.confirmPassword} 
+                  onChange={e => setSecureData({...secureData, confirmPassword: e.target.value})} 
+                  placeholder="Подтвердите пароль"
+                  className={`w-full bg-gray-100 dark:bg-slate-800 border p-3 rounded-xl font-bold text-sm dark:text-white ${passwordError ? 'border-red-500' : 'border-gray-200 dark:border-slate-700'}`}
+                />
+                {passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
+              </div>
+            )}
+          </div>
+
+          {/* Info */}
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Activity size={18} className="text-indigo-600" />
+              <span className="text-sm font-black uppercase dark:text-white">ИНФОРМАЦИЯ</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-green-500/5 rounded-xl border border-green-500/20">
+              <ShieldCheck className="text-green-500" size={16} />
+              <div>
+                <p className="font-black text-xs uppercase dark:text-white">Active Node</p>
+                <p className="text-[10px] text-green-600 font-bold uppercase">Nominal</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-amber-500/5 rounded-xl border border-amber-500/20">
+              <Fingerprint className="text-amber-500" size={16} />
+              <div>
+                <p className="font-black text-xs uppercase dark:text-white">Secure ID</p>
+                <p className="text-[10px] text-amber-600 font-bold uppercase">Protected</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <motion.button 
+            whileTap={{ scale: 0.98 }} 
+            onClick={handleUpdate}
+            disabled={loading} 
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
+          >
+            {loading ? <Loader2 className="animate-spin" size={18}/> : <><Save size={18}/><span>СОХРАНИТЬ</span></>}
+          </motion.button>
+
+          {/* Logout Button */}
+          <motion.button 
+            whileTap={{ scale: 0.98 }}
+            onClick={handleLogOut} 
+            className="w-full p-4 rounded-2xl border-2 border-red-500/20 text-red-500 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 mb-4"
+          >
+            <LogOut size={16} /> <span>ВЫЙТИ</span>
+          </motion.button>
+
+          {/* Privacy */}
+          <div className="p-4 border-2 border-dashed border-gray-200 dark:border-slate-800 rounded-2xl bg-white/50 dark:bg-slate-900/50">
+            <div className="flex items-center gap-2 mb-2 text-indigo-600">
+              <LockKeyhole size={14} />
+              <span className="text-[10px] font-black uppercase">Privacy Protocol</span>
+            </div>
+            <p className="text-[9px] font-bold text-gray-600 dark:text-gray-300 uppercase">Your data is strictly encrypted using military-grade standards.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop version
   return (
     <div className={`flex h-screen overflow-hidden relative transition-colors duration-500 ${darkMode ? 'dark bg-[#020617]' : 'bg-gray-100'}`}>
       <style>{`
@@ -239,7 +474,7 @@ const Settings = () => {
           </div>
           
           <div className="flex items-center justify-between mb-8 relative z-10">
-            <button onClick={() => navigate(-1)} className="p-2.5 bg-gray-100 dark:bg-slate-800 rounded-xl text-gray-500 hover:text-indigo-600 border-2 border-transparent hover:border-indigo-600 transition-all mb-25">
+            <button onClick={() => navigate(-1)} className="p-2.5 bg-gray-100 dark:bg-slate-800 rounded-xl text-gray-500 hover:text-indigo-600 border-2 border-transparent hover:border-indigo-600 transition-all">
               <ChevronLeft size={24}/>
             </button>
             <SectionHeader icon={Zap} text="НАСТРОЙКИ" />
