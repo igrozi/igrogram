@@ -383,7 +383,7 @@ const Room = () => {
     { id: 'calls', icon: Phone, label: 'ЗВОНКИ', action: () => {} },
     { id: 'saved', icon: Archive, label: 'СОХР.', action: () => {} },
     { id: 'settings', icon: Settings, label: 'НАСТРОЙКИ', action: () => navigate('/settings') },
-    { id: 'theme', icon: darkMode ? Sun : Moon, label: darkMode ? 'СВЕТЛАЯ' : 'ТЁМНАЯ', action: () => setDarkMode(!darkMode) },
+    { id: 'theme', icon: darkMode ? Sun : Moon, label: darkMode ? 'СВЕТЛАЯ ТЕМА' : 'ТЁМНАЯ ТЕМА', action: () => setDarkMode(!darkMode) },
   ];
 
   const mobileBottomTabs = [
