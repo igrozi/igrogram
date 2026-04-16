@@ -24,7 +24,7 @@ const formatLastSeen = (dateString) => {
   const isToday = date.toDateString() === now.toDateString();
   const timeOptions = { hour: '2-digit', minute: '2-digit' };
   const timeString = date.toLocaleTimeString('ru-RU', timeOptions);
-  if (isToday) return `Сегодня в ${timeString}`;
+  if (isToday) return `сегодня в ${timeString}`;
   const dateOptions = { day: 'numeric', month: 'short' };
   return `${date.toLocaleDateString('ru-RU', dateOptions)} в ${timeString}`;
 };
@@ -343,7 +343,7 @@ const Profile = () => {
             className={`transition-all cursor-pointer ${disabled ? 'cursor-default opacity-80' : 'hover:scale-125 active:scale-95'}`}
           >
             <Star 
-              size={24} 
+              size={28} 
               fill={(hoverRating || vote) >= star ? "#fbbf24" : "none"} 
               className={(hoverRating || vote) >= star ? "text-yellow-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "text-gray-400 dark:text-slate-600"} 
               strokeWidth={2}
@@ -374,17 +374,17 @@ const Profile = () => {
     };
     
     return (
-      <div className={`p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-slate-800/20 border-2 ${isPinned ? 'border-yellow-500/60 bg-yellow-500/5' : 'border-gray-200 dark:border-slate-800/60'} rounded-[2rem] md:rounded-[3rem] transition-all group shadow-sm hover:shadow-md`}>
+      <div className={`p-8 bg-gray-50 dark:bg-slate-800/20 border-2 ${isPinned ? 'border-yellow-500/60 bg-yellow-500/5' : 'border-gray-200 dark:border-slate-800/60'} rounded-[3rem] transition-all group shadow-sm hover:shadow-md`}>
         {isPinned && (
-          <div className="flex items-center gap-2 mb-3 md:mb-4 text-yellow-500">
-            <Pin size={14} />
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-wider">Закреплено</span>
+          <div className="flex items-center gap-2 mb-4 text-yellow-500">
+            <Pin size={16} />
+            <span className="text-xs font-black uppercase tracking-wider">Закреплено</span>
           </div>
         )}
-        <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+        <div className="flex items-start gap-4 mb-4">
           <img 
             src={actualAvatar || `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`} 
-            className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-xl md:rounded-2xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm" 
+            className="w-14 h-14 rounded-2xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm" 
             alt={post.author_name}
             onError={(e) => {
               e.target.onerror = null;
@@ -392,22 +392,22 @@ const Profile = () => {
             }}
           />
           <div className="flex-1">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-1">
+            <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-black text-base md:text-lg dark:text-white text-gray-900">{post.author_name}</h4>
-                <p className="text-indigo-600 dark:text-indigo-400 text-xs md:text-sm font-bold">@{post.author_username}</p>
+                <h4 className="font-black text-lg dark:text-white text-gray-900">{post.author_name}</h4>
+                <p className="text-indigo-600 dark:text-indigo-400 text-sm font-bold">@{post.author_username}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 dark:text-slate-500 text-[10px] md:text-xs font-bold">
+                <span className="text-gray-500 dark:text-slate-500 text-xs font-bold">
                   {formatDateWithTime(post.created_at)}
                 </span>
                 {user && post.author_id === user.user_id && (
                   <>
                     <button onClick={() => handleTogglePinPost(post.id, isPinned)} className="text-yellow-500 hover:text-yellow-400 transition-colors p-1 cursor-pointer" title={isPinned ? "Открепить" : "Закрепить"}>
-                      {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+                      {isPinned ? <PinOff size={16} /> : <Pin size={16} />}
                     </button>
                     <button onClick={() => handleDeletePost(post.id)} className="text-red-500 hover:text-red-400 transition-colors p-1 cursor-pointer" title="Удалить пост">
-                      <Trash2 size={14} />
+                      <Trash2 size={16} />
                     </button>
                   </>
                 )}
@@ -416,13 +416,13 @@ const Profile = () => {
           </div>
         </div>
         
-        {post.content && <p className="dark:text-white text-gray-800 text-base md:text-lg mb-4 md:mb-6 whitespace-pre-wrap font-medium">{post.content}</p>}
+        {post.content && <p className="dark:text-white text-gray-800 text-lg mb-6 whitespace-pre-wrap font-medium">{post.content}</p>}
         {post.image_url && (
-          <div className="mb-4 md:mb-6 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border-2 border-gray-200 dark:border-slate-700/50 shadow-md">
+          <div className="mb-6 rounded-[2rem] overflow-hidden border-2 border-gray-200 dark:border-slate-700/50 shadow-md">
             <img 
               src={post.image_url} 
               alt="Прикрепленное медиа" 
-              className="w-full h-auto object-cover max-h-[400px] md:max-h-[500px]"
+              className="w-full h-auto object-cover max-h-[500px]"
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.style.display = 'none';
@@ -431,20 +431,20 @@ const Profile = () => {
           </div>
         )}
         
-        <div className="flex items-center gap-4 md:gap-6 pt-3 md:pt-4 border-t border-gray-200 dark:border-slate-700/50">
+        <div className="flex items-center gap-6 pt-4 border-t border-gray-200 dark:border-slate-700/50">
           <button 
             onClick={() => handleLikePost(post.id, post.likes || [])} 
-            className={`flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-xl transition-all font-bold cursor-pointer ${post.likes?.includes(user?.user_id) ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-slate-800'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold cursor-pointer ${post.likes?.includes(user?.user_id) ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-slate-800'}`}
           >
-            <Heart size={18} fill={post.likes?.includes(user?.user_id) ? "#ef4444" : "none"} className={post.likes?.includes(user?.user_id) ? "text-red-500" : "text-gray-400 dark:text-slate-400"} />
-            <span className="text-sm">{(post.likes || []).length}</span>
+            <Heart size={20} fill={post.likes?.includes(user?.user_id) ? "#ef4444" : "none"} className={post.likes?.includes(user?.user_id) ? "text-red-500" : "text-gray-400 dark:text-slate-400"} />
+            <span>{(post.likes || []).length}</span>
           </button>
           <button 
             onClick={() => setShowComments(prev => ({...prev, [post.id]: !prev[post.id]}))} 
-            className={`flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-xl transition-all font-bold cursor-pointer ${isCommentsOpen ? 'bg-blue-500/10 text-blue-500 dark:text-blue-400 hover:bg-blue-500/20 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-blue-500 hover:bg-gray-200 dark:hover:bg-slate-800'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold cursor-pointer ${isCommentsOpen ? 'bg-blue-500/10 text-blue-500 dark:text-blue-400 hover:bg-blue-500/20 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-blue-500 hover:bg-gray-200 dark:hover:bg-slate-800'}`}
           >
-            <MessageSquare size={18} />
-            <span className="text-sm">{post.comments_count || 0}</span>
+            <MessageSquare size={20} />
+            <span>{post.comments_count || 0}</span>
           </button>
         </div>
         
@@ -455,29 +455,29 @@ const Profile = () => {
               animate={{ opacity: 1, height: 'auto' }} 
               exit={{ opacity: 0, height: 0 }} 
               transition={{ duration: 0.2 }}
-              className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200 dark:border-slate-700/50 overflow-hidden"
+              className="mt-6 pt-6 border-t border-gray-200 dark:border-slate-700/50 overflow-hidden"
             >
-              <h5 className="font-black text-xs md:text-sm uppercase text-gray-500 dark:text-slate-400 mb-3 md:mb-4">Комментарии</h5>
+              <h5 className="font-black text-sm uppercase text-gray-500 dark:text-slate-400 mb-4">Комментарии</h5>
               
               {localReplyingTo && (
-                <div className="mb-3 md:mb-4 p-2 md:p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 flex items-center justify-between">
+                <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Reply size={12} className="text-indigo-600" />
-                    <span className="text-[10px] md:text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                    <Reply size={14} className="text-indigo-600" />
+                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
                       Ответ {localReplyingTo.author_name}
                     </span>
                   </div>
                   <button onClick={() => setLocalReplyingTo(null)} className="text-gray-500 hover:text-gray-700 cursor-pointer">
-                    <X size={12} />
+                    <X size={14} />
                   </button>
                 </div>
               )}
               
               {user && (
-                <div className="mb-4 md:mb-6 flex gap-2 md:gap-3">
+                <div className="mb-6 flex gap-3">
                   <img 
                     src={currentUserProfile?.avatar_url || `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`} 
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm" 
+                    className="w-10 h-10 rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm" 
                     alt="Ваш аватар"
                     onError={(e) => {
                       e.target.onerror = null;
@@ -495,50 +495,50 @@ const Profile = () => {
                           handleAddCommentLocal();
                         } 
                       }} 
-                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-lg md:rounded-xl px-3 md:px-4 py-1.5 md:py-2 text-sm dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner" 
+                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-2 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner" 
                     />
                     <button 
                       onClick={handleAddCommentLocal}
                       disabled={isAddingComment}
-                      className="px-4 md:px-6 bg-indigo-600 text-white rounded-lg md:rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50"
+                      className="px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50"
                     >
-                      {isAddingComment ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                      {isAddingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                     </button>
                   </div>
                 </div>
               )}
               
-              <div className="space-y-3 md:space-y-4 max-h-80 md:max-h-96 overflow-y-auto custom-scrollbar pr-1 md:pr-2">
+              <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar pr-2">
                 {(post.comments || []).map(comment => {
                   const isReply = comment.reply_to;
                   return (
-                    <div key={comment.id} className={`flex gap-2 md:gap-3 group ${isReply ? 'ml-4 md:ml-8' : ''}`}>
+                    <div key={comment.id} className={`flex gap-3 group ${isReply ? 'ml-8' : ''}`}>
                       <img 
                         src={comment.author_avatar || `https://ui-avatars.com/api/?name=${comment.author_name}&background=4f46e5&color=fff&size=64`} 
-                        className="w-6 h-6 md:w-8 md:h-8 rounded-md md:rounded-lg object-cover shadow-sm border border-gray-200 dark:border-slate-700" 
+                        className="w-8 h-8 rounded-lg object-cover shadow-sm border border-gray-200 dark:border-slate-700" 
                         alt={comment.author_name}
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = `https://ui-avatars.com/api/?name=${comment.author_name}&background=4f46e5&color=fff&size=64`;
                         }}
                       />
-                      <div className="flex-1 bg-gray-100 dark:bg-slate-800/30 rounded-lg md:rounded-xl p-2 md:p-3 border border-gray-200 dark:border-slate-700/30 shadow-sm">
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-1 gap-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-xs md:text-sm dark:text-white text-gray-900">{comment.author_name}</span>
+                      <div className="flex-1 bg-gray-100 dark:bg-slate-800/30 rounded-xl p-3 border border-gray-200 dark:border-slate-700/30 shadow-sm">
+                        <div className="flex justify-between items-start mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm dark:text-white text-gray-900">{comment.author_name}</span>
                             {comment.reply_to_author && (
-                              <span className="text-[10px] md:text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1">
+                              <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1">
                                 <Reply size={10} /> {comment.reply_to_author}
                               </span>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[8px] md:text-[10px] text-gray-500 dark:text-slate-500 font-bold">
+                            <span className="text-[10px] text-gray-500 dark:text-slate-500 font-bold">
                               {formatDateWithTime(comment.created_at)}
                             </span>
                             {user && (comment.author_id === user.user_id || isOwnProfile) && (
                               <button onClick={() => handleDeleteComment(post.id, comment.id)} className="text-gray-400 dark:text-slate-500 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer" title="Удалить комментарий">
-                                <Trash2 size={12} />
+                                <Trash2 size={14} />
                               </button>
                             )}
                             {user && comment.author_id !== user.user_id && (
@@ -547,18 +547,18 @@ const Profile = () => {
                                 className="text-gray-400 dark:text-slate-500 hover:text-indigo-500 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
                                 title="Ответить"
                               >
-                                <Reply size={12} />
+                                <Reply size={14} />
                               </button>
                             )}
                           </div>
                         </div>
-                        <p className="text-xs md:text-sm text-gray-700 dark:text-slate-300 font-medium">{comment.content}</p>
+                        <p className="text-sm text-gray-700 dark:text-slate-300 font-medium">{comment.content}</p>
                       </div>
                     </div>
                   );
                 })}
                 {(post.comments || []).length === 0 && (
-                  <p className="text-center text-gray-500 dark:text-slate-500 text-xs md:text-sm py-3 md:py-4 font-bold">Пока нет комментариев. Будьте первым!</p>
+                  <p className="text-center text-gray-500 dark:text-slate-500 text-sm py-4 font-bold">Пока нет комментариев. Будьте первым!</p>
                 )}
               </div>
             </motion.div>
@@ -573,18 +573,18 @@ const Profile = () => {
       <div className={`h-screen flex flex-col items-center justify-center transition-colors duration-500 ${darkMode ? 'dark bg-[#020617]' : 'bg-gray-100'}`}>
         <div className="relative">
           <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
-          <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3 md:mb-4 relative" />
+          <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4 relative" />
         </div>
-        <span className="text-indigo-500 font-black tracking-widest animate-pulse uppercase text-sm">Загрузка...</span>
+        <span className="text-indigo-500 font-black tracking-widest animate-pulse uppercase">Загрузка...</span>
       </div>
     );
   }
   
   if (error) {
     return (
-      <div className={`h-screen flex flex-col items-center justify-center p-4 transition-colors duration-500 ${darkMode ? 'dark bg-[#020617]' : 'bg-gray-100'}`}>
-        <div className="text-red-500 text-lg md:text-xl font-bold mb-4 text-center">{error}</div>
-        <button onClick={() => navigate('/')} className="px-5 py-2.5 md:px-6 md:py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors cursor-pointer text-sm">Вернуться на главную</button>
+      <div className={`h-screen flex flex-col items-center justify-center transition-colors duration-500 ${darkMode ? 'dark bg-[#020617]' : 'bg-gray-100'}`}>
+        <div className="text-red-500 text-xl font-bold mb-4">{error}</div>
+        <button onClick={() => navigate('/')} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors cursor-pointer">Вернуться на главную</button>
       </div>
     );
   }
@@ -618,27 +618,21 @@ const Profile = () => {
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-3 md:px-4 lg:px-6 py-6 md:py-8 lg:py-10">
-        <header className="flex justify-between items-center mb-6 md:mb-8 lg:mb-12">
-          <button onClick={() => navigate(-1)} className="p-3 md:p-4 bg-white/80 dark:bg-slate-900/50 border-2 border-gray-300 dark:border-slate-800 rounded-2xl md:rounded-3xl hover:border-indigo-500 transition-all shadow-xl hover:scale-105 cursor-pointer backdrop-blur-sm">
-            <ChevronLeft className="dark:text-white text-gray-600" size={20} />
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
+        <header className="flex justify-between items-center mb-12">
+          <button onClick={() => navigate(-1)} className="p-4 bg-white/80 dark:bg-slate-900/50 border-2 border-gray-300 dark:border-slate-800 rounded-3xl hover:border-indigo-500 transition-all shadow-xl hover:scale-105 cursor-pointer backdrop-blur-sm">
+            <ChevronLeft className="dark:text-white text-gray-600" />
           </button>
-          <div className="bg-white/80 dark:bg-slate-900/50 border-2 border-gray-300 dark:border-slate-800 px-3 md:px-4 lg:px-6 py-2 md:py-3 rounded-2xl md:rounded-3xl flex items-center gap-2 md:gap-3 shadow-md backdrop-blur-sm">
-            <div className={`w-2 h-2 rounded-full ${checkIsOnline(profile) ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-slate-600'}`} />
-            <span className={`text-[8px] md:text-[10px] font-black tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-60 ${checkIsOnline(profile) ? 'text-green-600 dark:text-green-500' : 'text-gray-600 dark:text-gray-400'}`}>
-              {checkIsOnline(profile) ? 'Онлайн' : formatLastSeen(profile?.last_seen)}
-            </span>
-          </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4">
-            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[2.5rem] md:rounded-[3.5rem] p-6 md:p-8 lg:p-10 text-center shadow-2xl lg:sticky lg:top-10">
-              <div className="relative w-32 h-32 md:w-36 md:h-36 lg:w-44 lg:h-44 mx-auto mb-6 md:mb-8">
+            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[3.5rem] p-10 text-center shadow-2xl sticky top-10">
+              <div className="relative w-44 h-44 mx-auto mb-8">
                 <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 rounded-full" />
                 <img 
                   src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.name || 'User'}&background=4f46e5&color=fff&size=512`} 
-                  className="w-full h-full object-cover rounded-[2rem] md:rounded-[3rem] border-4 border-gray-100 dark:border-slate-700 relative z-10 shadow-2xl" 
+                  className="w-full h-full object-cover rounded-[3rem] border-4 border-gray-100 dark:border-slate-700 relative z-10 shadow-2xl" 
                   alt={profile?.name}
                   onError={(e) => {
                     e.target.onerror = null;
@@ -647,58 +641,67 @@ const Profile = () => {
                 />
               </div>
 
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter mb-1 dark:text-white text-gray-900">
+              <h1 className="text-4xl font-black tracking-tighter mb-2 dark:text-white text-gray-900">
                 <AnimatedTitle text={profile?.name || "Пользователь"} />
               </h1>
-              <p className="text-indigo-600 dark:text-indigo-400 font-bold text-xs md:text-sm tracking-widest mb-6 md:mb-8 uppercase opacity-80">@{profile?.username}</p>
+              
+              {/* Онлайн статус ПОД username */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <div className={`w-2 h-2 rounded-full ${checkIsOnline(profile) ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-slate-600'}`} />
+                <span className={`text-[10px] font-black tracking-wider uppercase ${checkIsOnline(profile) ? 'text-green-600 dark:text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                  {checkIsOnline(profile) ? 'Онлайн' : formatLastSeen(profile?.last_seen)}
+                </span>
+              </div>
+              
+              <p className="text-indigo-600 dark:text-indigo-400 font-bold text-sm tracking-widest mb-8 uppercase opacity-80">@{profile?.username}</p>
 
               {!isOwnProfile && user && (
-                <div className="bg-gray-50 dark:bg-slate-800/40 rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-6 mb-6 md:mb-8 border-2 border-gray-200 dark:border-slate-700/50 backdrop-blur-sm shadow-inner">
-                  <h3 className="text-xs md:text-sm font-black uppercase text-gray-500 dark:text-slate-400 mb-3 md:mb-4">{hasVoted ? 'Ваша оценка' : 'Поставить оценку'}</h3>
+                <div className="bg-gray-50 dark:bg-slate-800/40 rounded-[2.5rem] p-6 mb-8 border-2 border-gray-200 dark:border-slate-700/50 backdrop-blur-sm shadow-inner">
+                  <h3 className="text-sm font-black uppercase text-gray-500 dark:text-slate-400 mb-4">{hasVoted ? 'Ваша оценка' : 'Поставить оценку'}</h3>
                   <RatingStars vote={myVote} onRate={handleRate} disabled={hasVoted} />
-                  {hasVoted && <p className="text-[10px] md:text-xs text-gray-500 dark:text-slate-400 mt-2 md:mt-3">Вы оценили на {myVote}/5</p>}
+                  {hasVoted && <p className="text-xs text-gray-500 dark:text-slate-400 mt-3">Вы оценили на {myVote}/5</p>}
                 </div>
               )}
 
               {!isOwnProfile && user && (
-                <button onClick={goToChat} className="w-full py-4 md:py-5 text-white bg-indigo-600 rounded-[1.5rem] md:rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all flex items-center justify-center gap-2 md:gap-3 group hover:scale-[1.02] active:scale-[0.98] mb-6 md:mb-8 cursor-pointer">
-                  <MessageCircle size={20} fill="currentColor" /> Написать сообщение
+                <button onClick={goToChat} className="w-full py-5 text-white bg-indigo-600 rounded-[2rem] font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 group hover:scale-[1.02] active:scale-[0.98] mb-8 cursor-pointer">
+                  <MessageCircle size={22} fill="currentColor" /> Написать сообщение
                 </button>
               )}
 
-              <div className="mt-6 md:mt-8 p-4 md:p-6 bg-gray-100/80 dark:bg-slate-950/50 rounded-2xl md:rounded-3xl border-2 border-gray-200 dark:border-slate-800 shadow-inner">
-                <div className="flex justify-between items-center mb-3 md:mb-4">
-                  <h3 className="text-xs md:text-sm font-black uppercase text-gray-500 dark:text-slate-400">О себе</h3>
+              <div className="mt-8 p-6 bg-gray-100/80 dark:bg-slate-950/50 rounded-3xl border-2 border-gray-200 dark:border-slate-800 shadow-inner">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-sm font-black uppercase text-gray-500 dark:text-slate-400">О себе</h3>
                   {isOwnProfile && !editingBio && (
                     <button onClick={() => {
                       setEditingBio(true);
                       setTimeout(() => bioInputRef.current?.focus(), 100);
                     }} className="text-indigo-500 dark:text-indigo-400 hover:text-indigo-400 dark:hover:text-indigo-300 transition-colors cursor-pointer">
-                      <Pencil size={14} />
+                      <Pencil size={16} />
                     </button>
                   )}
                 </div>
                 {editingBio ? (
-                  <div className="space-y-2 md:space-y-3">
+                  <div className="space-y-3">
                     <textarea 
                       ref={bioInputRef}
                       value={newBio} 
                       onChange={(e) => setNewBio(e.target.value)} 
                       placeholder="Расскажите о себе..." 
-                      className="w-full bg-white dark:bg-slate-800/50 border-2 border-gray-300 dark:border-slate-700 rounded-xl p-2 md:p-3 text-sm text-gray-900 dark:text-white resize-none h-24 md:h-32 outline-none focus:border-indigo-500" 
+                      className="w-full bg-white dark:bg-slate-800/50 border-2 border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-900 dark:text-white resize-none h-32 outline-none focus:border-indigo-500" 
                       maxLength={250} 
                     />
                     <div className="flex gap-2">
-                      <button onClick={handleUpdateBio} disabled={isUpdatingBio} className="flex-1 text-white bg-indigo-600 hover:bg-indigo-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50 text-sm">
-                        {isUpdatingBio ? <Loader2 size={18} className="animate-spin" /> : <Check size={20} />}
+                      <button onClick={handleUpdateBio} disabled={isUpdatingBio} className="flex-1 text-white bg-indigo-600 hover:bg-indigo-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50">
+                        {isUpdatingBio ? <Loader2 size={20} className="animate-spin" /> : <Check size={24} />}
                       </button>
-                      <button onClick={() => { setEditingBio(false); setNewBio(profile?.bio || ""); }} className="flex-1 text-white bg-gray-800 hover:bg-gray-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer text-sm">
-                        <X size={20} />
+                      <button onClick={() => { setEditingBio(false); setNewBio(profile?.bio || ""); }} className="flex-1 text-white bg-gray-800 hover:bg-gray-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                        <X size={24} />
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs md:text-sm font-bold text-gray-700 dark:text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
+                  <p className="text-sm font-bold text-gray-700 dark:text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
                     {profile?.bio ? profile.bio : (isOwnProfile ? 
                       <span className="text-gray-400 dark:text-slate-500">Нажмите на карандаш, чтобы добавить информацию о себе</span> : 
                       <span className="text-gray-400 dark:text-slate-500">Пользователь еще не добавил информацию о себе</span>
@@ -707,89 +710,89 @@ const Profile = () => {
                 )}
               </div>
               
-              <div className="mt-4 md:mt-6 space-y-2 md:space-y-3">
-                <div className="flex items-center gap-2 md:gap-3 text-gray-500 dark:text-slate-400 justify-center">
-                  <Calendar size={14} />
-                  <span className="text-xs md:text-sm font-bold">Зарегистрирован: {new Date(profile?.created_at).toLocaleDateString('ru-RU')}</span>
+              <div className="mt-6 space-y-3">
+                <div className="flex items-center gap-3 text-gray-500 dark:text-slate-400 justify-center">
+                  <Calendar size={16} />
+                  <span className="text-sm font-bold">Зарегистрирован: {new Date(profile?.created_at).toLocaleDateString('ru-RU')}</span>
                 </div>
               </div>
             </div>
           </div>
           
-          <div className="lg:col-span-8 space-y-6 md:space-y-8">
-            <div className="grid grid-cols-4 gap-2 md:gap-3 lg:gap-4">
-              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-2 md:p-3 lg:p-4 rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
-                <Star size={16} className="md:size-5 lg:size-6 text-yellow-500 mb-1 md:mb-2" />
-                <span className="text-lg md:text-xl lg:text-2xl font-black dark:text-white text-gray-900">{profile?.rating ? Number(profile.rating).toFixed(1) : '0.0'}</span>
-                <span className="text-[8px] md:text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Рейтинг</span>
-                <span className="text-[7px] md:text-[9px] text-gray-400 dark:text-slate-600">({profile?.rating_count || 0})</span>
+          <div className="lg:col-span-8 space-y-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
+                <Star size={24} className="text-yellow-500 mb-2" />
+                <span className="text-2xl font-black dark:text-white text-gray-900">{profile?.rating ? Number(profile.rating).toFixed(1) : '0.0'}</span>
+                <span className="text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Рейтинг</span>
+                <span className="text-[9px] text-gray-400 dark:text-slate-600">({profile?.rating_count || 0})</span>
               </div>
-              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-2 md:p-3 lg:p-4 rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
-                <MessageCircle size={16} className="md:size-5 lg:size-6 text-blue-500 mb-1 md:mb-2" />
-                <span className="text-lg md:text-xl lg:text-2xl font-black dark:text-white text-gray-900">{allPosts.length}</span>
-                <span className="text-[8px] md:text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Посты</span>
+              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
+                <MessageCircle size={24} className="text-blue-500 mb-2" />
+                <span className="text-2xl font-black dark:text-white text-gray-900">{allPosts.length}</span>
+                <span className="text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Посты</span>
               </div>
-              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-2 md:p-3 lg:p-4 rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
-                <Heart size={16} className="md:size-5 lg:size-6 text-red-500 mb-1 md:mb-2" />
-                <span className="text-lg md:text-xl lg:text-2xl font-black dark:text-white text-gray-900">{totalLikes}</span>
-                <span className="text-[8px] md:text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Лайки</span>
+              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
+                <Heart size={24} className="text-red-500 mb-2" />
+                <span className="text-2xl font-black dark:text-white text-gray-900">{totalLikes}</span>
+                <span className="text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Лайки</span>
               </div>
-              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-2 md:p-3 lg:p-4 rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
-                <MessageSquare size={16} className="md:size-5 lg:size-6 text-purple-500 mb-1 md:mb-2" />
-                <span className="text-lg md:text-xl lg:text-2xl font-black dark:text-white text-gray-900">{totalComments}</span>
-                <span className="text-[8px] md:text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Комменты</span>
+              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
+                <MessageSquare size={24} className="text-purple-500 mb-2" />
+                <span className="text-2xl font-black dark:text-white text-gray-900">{totalComments}</span>
+                <span className="text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Комменты</span>
               </div>
             </div>
             
-            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[3rem] md:rounded-[4rem] p-5 md:p-8 lg:p-10 shadow-2xl">
-              <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8 lg:mb-10">
-                <div className="p-3 md:p-4 bg-indigo-600 rounded-2xl md:rounded-3xl text-white shadow-lg shadow-indigo-500/40"><Zap size={20} className="md:size-6" fill="currentColor" /></div>
-                <h2 className="text-xl md:text-2xl lg:text-3xl font-black uppercase tracking-tighter dark:text-white text-gray-900">Стена публикаций</h2>
+            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[4rem] p-10 shadow-2xl">
+              <div className="flex items-center gap-4 mb-10">
+                <div className="p-4 bg-indigo-600 rounded-3xl text-white shadow-lg shadow-indigo-500/40"><Zap size={24} fill="currentColor" /></div>
+                <h2 className="text-3xl font-black uppercase tracking-tighter dark:text-white text-gray-900">Стена публикаций</h2>
               </div>
               
               {isOwnProfile && (
-                <div className="mb-6 md:mb-8 lg:mb-10 p-4 md:p-6 bg-gray-50 dark:bg-slate-800/40 rounded-[2rem] md:rounded-[2.5rem] border-2 border-gray-200 dark:border-slate-700/50 shadow-inner">
+                <div className="mb-10 p-6 bg-gray-50 dark:bg-slate-800/40 rounded-[2.5rem] border-2 border-gray-200 dark:border-slate-700/50 shadow-inner">
                   <textarea 
                     value={postText} 
                     onChange={(e) => setPostText(e.target.value)} 
                     placeholder="Что у вас нового?" 
-                    className="w-full bg-transparent border-none outline-none dark:text-white text-gray-900 font-bold text-base md:text-lg resize-none mb-3 md:mb-4 h-20 md:h-24 placeholder:text-gray-400 dark:placeholder:text-slate-600" 
+                    className="w-full bg-transparent border-none outline-none dark:text-white text-gray-900 font-bold text-lg resize-none mb-4 h-24 placeholder:text-gray-400 dark:placeholder:text-slate-600" 
                     maxLength={1000} 
                   />
                   <AnimatePresence>
                     {imagePreview && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="relative w-full mb-4 md:mb-6 rounded-2xl md:rounded-3xl overflow-hidden border-2 border-gray-300 dark:border-slate-700 shadow-md">
-                        <img src={imagePreview} className="w-full h-48 md:h-64 object-cover" alt="Предпросмотр медиа" />
-                        <button onClick={clearImageSelection} className="absolute top-3 md:top-4 right-3 md:right-4 p-1.5 md:p-2 bg-black/60 rounded-xl text-white hover:bg-red-500 transition-colors backdrop-blur-md cursor-pointer" title="Удалить фото">
-                          <X size={16}/>
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="relative w-full mb-6 rounded-3xl overflow-hidden border-2 border-gray-300 dark:border-slate-700 shadow-md">
+                        <img src={imagePreview} className="w-full h-64 object-cover" alt="Предпросмотр медиа" />
+                        <button onClick={clearImageSelection} className="absolute top-4 right-4 p-2 bg-black/60 rounded-xl text-white hover:bg-red-500 transition-colors backdrop-blur-md cursor-pointer" title="Удалить фото">
+                          <X size={18}/>
                         </button>
                       </motion.div>
                     )}
                   </AnimatePresence>
 
-                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <span className="text-gray-500 dark:text-slate-500 text-xs md:text-sm font-bold">{postText.length}/1000</span>
-                      <button onClick={() => fileInputRef.current?.click()} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 flex items-center gap-1 md:gap-2 font-bold transition-colors cursor-pointer text-sm">
-                        <ImageIcon size={16} /> Фото
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <span className="text-gray-500 dark:text-slate-500 text-sm font-bold">{postText.length}/1000 символов</span>
+                      <button onClick={() => fileInputRef.current?.click()} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 flex items-center gap-2 font-bold transition-colors cursor-pointer">
+                        <ImageIcon size={18} /> Фото
                       </button>
                       <input type="file" hidden ref={fileInputRef} onChange={handleImageSelect} accept="image/*" />
                     </div>
-                    <button onClick={createPost} disabled={isPosting || (!postText.trim() && !postImage)} className="px-6 md:px-8 py-2.5 md:py-3 bg-indigo-600 text-white rounded-xl md:rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-2 md:gap-3 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                      {isPosting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} {isPosting ? "ОБРАБОТКА..." : "Опубликовать"}
+                    <button onClick={createPost} disabled={isPosting || (!postText.trim() && !postImage)} className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs flex items-center gap-3 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                      {isPosting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />} {isPosting ? "ОБРАБОТКА..." : "Опубликовать"}
                     </button>
                   </div>
                 </div>
               )}
               
-              <div className="space-y-5 md:space-y-6 lg:space-y-8">
+              <div className="space-y-8">
                 {allPosts.map(post => (
                   <PostComponent key={post.id} post={post} />
                 ))}
                 
                 {allPosts.length === 0 && (
-                  <div className="p-12 md:p-16 lg:p-20 border-4 border-dashed border-gray-300 dark:border-slate-800 rounded-[2.5rem] md:rounded-[3rem] shadow-inner bg-gray-50 dark:bg-transparent">
-                    <p className="font-black uppercase text-center text-gray-400 dark:text-slate-600 tracking-[0.2em] md:tracking-[0.3em] text-sm">{isOwnProfile ? "У вас пока нет публикаций" : "Пользователь еще ничего не публиковал"}</p>
+                  <div className="p-20 border-4 border-dashed border-gray-300 dark:border-slate-800 rounded-[3rem] shadow-inner bg-gray-50 dark:bg-transparent">
+                    <p className="font-black uppercase text-center text-gray-400 dark:text-slate-600 tracking-[0.3em]">{isOwnProfile ? "У вас пока нет публикаций" : "Пользователь еще ничего не публиковал"}</p>
                   </div>
                 )}
               </div>

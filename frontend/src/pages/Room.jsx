@@ -12,6 +12,172 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+const createPopParticles = (message, bubble, color) => {
+  const bubbleRect = bubble.getBoundingClientRect();
+  const messageRect = message.getBoundingClientRect();
+  const speedProfiles = [
+      { durationMin: 1320, durationRange: 360, riseBoost: 0, easeSet: ["cubic-bezier(0.28, 0.72, 0.3, 1)", "cubic-bezier(0.3, 0.7, 0.32, 1)"] },
+      { durationMin: 1760, durationRange: 520, riseBoost: 10, easeSet: ["cubic-bezier(0.24, 0.7, 0.28, 1)", "cubic-bezier(0.22, 0.68, 0.3, 1)"] },
+      { durationMin: 2280, durationRange: 720, riseBoost: 18, easeSet: ["cubic-bezier(0.2, 0.62, 0.28, 1)", "cubic-bezier(0.18, 0.6, 0.26, 1)"] }
+  ];
+  const particleConfigs = [
+      ...Array.from({ length: 1 + Math.floor(Math.random() * 2) }, () => ({ kind: "large", sizeMin: 44, sizeRange: 20, riseBase: 180, riseRange: 56 })),
+      ...Array.from({ length: 3 + Math.floor(Math.random() * 4) }, () => ({ kind: "small", sizeMin: 10, sizeRange: 12, riseBase: 138, riseRange: 48 }))
+  ];
+
+  for (let index = 0; index < particleConfigs.length; index += 1) {
+      const particle = document.createElement("span");
+      const particleBody = document.createElement("span");
+      const config = particleConfigs[index];
+      const size = `${Math.round(config.sizeMin + Math.random() * config.sizeRange)}px`;
+      const xRatio = config.kind === "large" ? 0.16 + Math.random() * 0.68 : 0.08 + Math.random() * 0.84;
+      const yRatio = config.kind === "large" ? 0.56 + (Math.random() - 0.5) * 0.16 : 0.58 + (Math.random() - 0.5) * 0.24;
+      const originX = bubbleRect.left - messageRect.left + bubbleRect.width * xRatio;
+      const originY = bubbleRect.top - messageRect.top + bubbleRect.height * yRatio;
+      const driftX = `${Math.round((Math.random() - 0.5) * 6)}px`;
+      const speedProfile = speedProfiles[Math.floor(Math.random() * speedProfiles.length)];
+      const riseEnd = `${-Math.round(config.riseBase + speedProfile.riseBoost + Math.random() * config.riseRange)}px`;
+      const duration = `${Math.round(speedProfile.durationMin + Math.random() * speedProfile.durationRange)}ms`;
+      const delay = `${Math.round(285 + Math.random() * 35)}ms`;
+      const particleEase = speedProfile.easeSet[Math.floor(Math.random() * speedProfile.easeSet.length)];
+      const sway = `${Math.round((config.kind === "large" ? 16 : 8) + Math.random() * (config.kind === "large" ? 16 : 12)) * (Math.random() > 0.5 ? 1 : -1)}px`;
+
+      particle.className = "pop-particle";
+      particleBody.className = "pop-particle-body";
+      particle.style.left = `${originX}px`;
+      particle.style.top = `${originY}px`;
+      particle.style.setProperty("--size", size);
+      particle.style.setProperty("--color", color);
+      particle.style.setProperty("--duration", duration);
+      particle.style.setProperty("--delay", delay);
+      particle.style.setProperty("--particle-ease", particleEase);
+      particle.style.setProperty("--drift-x", driftX);
+      particle.style.setProperty("--rise-end", riseEnd);
+      particle.style.setProperty("--sway", sway);
+
+      particle.addEventListener("animationend", () => { particle.remove(); });
+      particle.appendChild(particleBody);
+      message.appendChild(particle);
+  }
+};
+
+const createSplashDroplets = (message, bubble, color) => {
+  const bubbleRect = bubble.getBoundingClientRect();
+  const messageRect = message.getBoundingClientRect();
+  const count = 6 + Math.floor(Math.random() * 3);
+  const centerX = bubbleRect.left - messageRect.left + bubbleRect.width / 2;
+  const centerY = bubbleRect.top - messageRect.top + bubbleRect.height / 2;
+  const radiusX = bubbleRect.width / 2;
+  const radiusY = bubbleRect.height / 2;
+
+  for (let index = 0; index < count; index += 1) {
+      const splash = document.createElement("span");
+      const side = index % 2 === 0 ? -1 : 1;
+      const angleBase = side === -1 ? Math.PI : 0;
+      const angleOffset = ((Math.floor(index / 2) / Math.max(1, Math.ceil(count / 2) - 1)) - 0.5) * 1.4;
+      const angle = angleBase + angleOffset + (Math.random() - 0.5) * 0.18;
+      const normalX = Math.cos(angle);
+      const normalY = Math.sin(angle);
+      const offset = 4 + Math.random() * 4;
+      const startX = centerX + normalX * (radiusX + offset);
+      const startY = centerY + normalY * (radiusY + offset * 0.8);
+      const lengthValue = Math.round(18 + Math.random() * 12);
+      const thicknessValue = Math.round(4 + Math.random() * 2);
+      const dotScale = (thicknessValue / lengthValue).toFixed(3);
+      const collapseShift = `${lengthValue - thicknessValue}px`;
+      const sx0 = `${Math.round(normalX * 1.5)}px`;
+      const sy0 = `${Math.round(normalY * 1.5)}px`;
+      const sx = `${Math.round(normalX * (8 + Math.random() * 6))}px`;
+      const sy = `${Math.round(normalY * (8 + Math.random() * 8))}px`;
+      const sxEnd = `${Math.round(normalX * (14 + Math.random() * 10))}px`;
+      const syEnd = `${Math.round(normalY * (14 + Math.random() * 12))}px`;
+      const rotate = `${Math.round((angle * 180) / Math.PI)}deg`;
+      const duration = `${Math.round(300 + Math.random() * 40)}ms`;
+      const delay = `${Math.round(300 + Math.random() * 16)}ms`;
+
+      splash.className = "pop-splash";
+      splash.style.left = `${startX}px`;
+      splash.style.top = `${startY}px`;
+      splash.style.setProperty("--color", color);
+      splash.style.setProperty("--splash-length", `${lengthValue}px`);
+      splash.style.setProperty("--splash-thickness", `${thicknessValue}px`);
+      splash.style.setProperty("--dot-scale", dotScale);
+      splash.style.setProperty("--collapse-shift", collapseShift);
+      splash.style.setProperty("--sx0", sx0);
+      splash.style.setProperty("--sy0", sy0);
+      splash.style.setProperty("--sx", sx);
+      splash.style.setProperty("--sy", sy);
+      splash.style.setProperty("--sx-end", sxEnd);
+      splash.style.setProperty("--sy-end", syEnd);
+      splash.style.setProperty("--rotate", rotate);
+      splash.style.setProperty("--duration", duration);
+      splash.style.setProperty("--delay", delay);
+
+      splash.addEventListener("animationend", () => { splash.remove(); });
+      message.appendChild(splash);
+  }
+};
+
+const BURST_ANIMATION_CSS = `
+  ::-webkit-scrollbar {
+    width: 0px !important;
+    height: 0px !important;
+    display: none !important;
+    background: transparent !important;
+  }
+
+  html, body {
+    overflow-x: hidden !important;
+    overscroll-behavior-y: none;
+  }
+
+  .message-container { 
+    transition: opacity 360ms, transform 360ms, max-height 480ms cubic-bezier(0.4, 0, 0.2, 1), margin 480ms, padding 480ms;
+    will-change: max-height, opacity, transform;
+  }
+
+  .message-container.collapsing { 
+    opacity: 0; 
+    max-height: 0 !important; 
+    margin-top: 0 !important; 
+    margin-bottom: 0 !important; 
+    padding-top: 0 !important; 
+    padding-bottom: 0 !important; 
+    transform: scale(0.96);
+    pointer-events: none;
+  }
+
+  *{
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .message-container { transition: opacity 360ms, transform 360ms, max-height 360ms, margin 360ms, padding 360ms; }
+  .message-container.bursting { pointer-events: none; z-index: 30; }
+  .bubble-wrapper.bursting { animation: bubble-shell-pop 480ms cubic-bezier(0.22, 0.86, 0.22, 1) both; position: relative; isolation: isolate; }
+  .bubble-wrapper.bursting::before, .bubble-wrapper.bursting::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+  .bubble-wrapper.bursting::before { z-index: -2; background: var(--bubble-fill); animation: bubble-fill-fade 480ms cubic-bezier(0.22, 0.86, 0.22, 1) both; }
+  .bubble-wrapper.bursting::after { z-index: -1; border: 0 solid var(--bubble-stroke); opacity: 0; animation: bubble-ring-pop 480ms cubic-bezier(0.22, 0.86, 0.22, 1) both; }
+  .bubble-wrapper.bursting .message-content { animation: bubble-text-fade 340ms cubic-bezier(0.3, 0, 0.2, 1) both; }
+  .message-container.collapsing { opacity: 0; max-height: 0; margin: 0; padding: 0; transform: scale(0.96); }
+  
+  .pop-particle { position: absolute; left: 0; top: 0; z-index: 10; width: var(--size); height: var(--size); pointer-events: none; opacity: 0; transform: translate(-50%, -50%) translate(var(--drift-x), 0) scale(0.86); animation: bubble-particle-flight var(--duration) var(--particle-ease) var(--delay) forwards; }
+  .pop-particle-body { position: absolute; inset: 0; box-sizing: border-box; border-radius: 999px; border: 5px solid var(--color); background: color-mix(in srgb, var(--color) 18%, transparent); backdrop-filter: blur(8px); animation: bubble-particle-sway var(--duration) ease-in-out var(--delay) forwards; }
+  .pop-particle-body::after { content: ""; position: absolute; inset: 24%; border-radius: inherit; background: rgba(255, 255, 255, 0.18); filter: blur(2px); }
+  
+  .pop-splash { position: absolute; left: 0; top: 0; z-index: 11; width: var(--splash-length); height: var(--splash-thickness); opacity: 0; pointer-events: none; transform-origin: left center; transform: translate(-50%, -50%) translate(var(--sx0), var(--sy0)) rotate(var(--rotate)) scale(1); animation: bubble-splash-flight var(--duration) cubic-bezier(0.22, 0.8, 0.2, 1) var(--delay) forwards; }
+  .pop-splash::before { content: ""; position: absolute; inset: 0; border-radius: 999px; background: var(--color); transform-origin: left center; transform: translateX(0) scaleX(var(--dot-scale)); animation: bubble-splash-collapse var(--duration) cubic-bezier(0.28, 0.84, 0.2, 1) var(--delay) forwards; }
+
+  @keyframes bubble-shell-pop { 0% { transform: scale(1); filter: none; opacity: 1; } 52% { transform: scale(1.12); filter: saturate(1.04); } 76% { transform: scale(1.145); opacity: 1; } 100% { transform: scale(0.8); filter: blur(10px); opacity: 0; } }
+  @keyframes bubble-fill-fade { 0% { opacity: 1; transform: scale(1); } 48% { opacity: 1; } 76% { opacity: 0.14; transform: scale(1.14); } 100% { opacity: 0; transform: scale(1); } }
+  @keyframes bubble-ring-pop { 0% { border-width: 0; opacity: 0; transform: scale(1); } 48% { border-width: 0; opacity: 0; } 76% { border-width: 1.8px; opacity: 0.95; transform: scale(1.14); } 100% { border-width: 0.4px; opacity: 0; transform: scale(1.28); } }
+  @keyframes bubble-text-fade { 0% { opacity: 1; transform: scale(1); } 56% { opacity: 1; transform: scale(1.08); } 76% { opacity: 0.92; transform: scale(1.1); } 100% { opacity: 0; transform: scale(0.98); } }
+  @keyframes bubble-particle-flight { 0% { opacity: 0; transform: translate(-50%, -50%) translate(var(--drift-x), 0) scale(0.86); } 10% { opacity: 0.96; } 100% { opacity: 0; transform: translate(-50%, -50%) translate(var(--drift-x), var(--rise-end)) scale(0.34); } }
+  @keyframes bubble-particle-sway { 0% { transform: translateX(0); } 12% { transform: translateX(calc(var(--sway) * 0.9)); } 24% { transform: translateX(calc(var(--sway) * -1)); } 36% { transform: translateX(calc(var(--sway) * 0.72)); } 48% { transform: translateX(calc(var(--sway) * -0.46)); } 60% { transform: translateX(calc(var(--sway) * 0.24)); } 72% { transform: translateX(calc(var(--sway) * -0.12)); } 84% { transform: translateX(calc(var(--sway) * 0.05)); } 100% { transform: translateX(0); } }
+  @keyframes bubble-splash-flight { 0% { opacity: 1; transform: translate(-50%, -50%) translate(var(--sx0), var(--sy0)) rotate(var(--rotate)) scale(1); } 34% { opacity: 1; transform: translate(-50%, -50%) translate(var(--sx), var(--sy)) rotate(var(--rotate)) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) translate(var(--sx-end), var(--sy-end)) rotate(var(--rotate)) scale(1); } }
+  @keyframes bubble-splash-collapse { 0% { transform: translateX(0) scaleX(var(--dot-scale)); } 34% { transform: translateX(0) scaleX(1); } 100% { transform: translateX(var(--collapse-shift)) scaleX(var(--dot-scale)); } }
+`;
+
 const checkIsOnline = (profile) => {
   if (!profile?.is_online) return false;
   if (!profile?.last_seen) return false;
@@ -53,17 +219,86 @@ const Room = () => {
   const [socket, setSocket] = useState(null);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, message: null });
   
-  // Mobile states
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeMobileTab, setActiveMobileTab] = useState('chats');
   const [showMobileChatList, setShowMobileChatList] = useState(true);
+
+  // Таймер бездействия для автоматического перевода в офлайн
+  const inactivityTimerRef = useRef(null);
+  const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 минут
+
+  // Функция обновления статуса онлайн
+  const updateOnlineStatus = useCallback(async (isOnline) => {
+    if (!user?.user_id || !userProfile?.$id) return;
+    try {
+      await api.updateProfile({
+        userId: user.user_id,
+        is_online: isOnline,
+        last_seen: new Date().toISOString()
+      }, token);
+    } catch (err) {
+      console.error("Ошибка обновления статуса:", err);
+    }
+  }, [user, userProfile, token]);
+
+  // Сброс таймера бездействия
+  const resetInactivityTimer = useCallback(() => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    // Если пользователь активен - обновляем статус онлайн
+    updateOnlineStatus(true);
+    // Запускаем новый таймер
+    inactivityTimerRef.current = setTimeout(() => {
+      updateOnlineStatus(false);
+    }, INACTIVITY_TIMEOUT);
+  }, [updateOnlineStatus]);
+
+  // Обработчики событий активности
+  useEffect(() => {
+    if (!user) return;
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    
+    const handleActivity = () => {
+      resetInactivityTimer();
+    };
+
+    events.forEach(event => {
+      window.addEventListener(event, handleActivity);
+    });
+
+    // Запускаем таймер при монтировании
+    resetInactivityTimer();
+
+    return () => {
+      events.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+      // При размонтировании (закрытии страницы) переводим в офлайн
+      updateOnlineStatus(false);
+    };
+  }, [user, resetInactivityTimer, updateOnlineStatus]);
+
+  // Обработчик закрытия/обновления страницы
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      updateOnlineStatus(false);
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [updateOnlineStatus]);
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Detect mobile
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -72,7 +307,6 @@ const Room = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Socket.io connection
   useEffect(() => {
     if (!user || !token) return;
     
@@ -300,7 +534,35 @@ const Room = () => {
   };
 
   const handleDeleteMessage = async (messageId) => {
+    if (deletingMessage === messageId) return;
     setDeletingMessage(messageId);
+    
+    const messageNodes = document.querySelectorAll(`#msg-${messageId}`);
+    const bubbleNodes = document.querySelectorAll(`#bubble-${messageId}`);
+    
+    const msgObj = messages.find(m => m.id === messageId);
+    const isMe = msgObj?.sender_id === user?.user_id;
+ 
+    const fillColor = isMe ? '#4f46e5' : (darkMode ? '#1e293b' : '#ffffff');
+    const strokeColor = isMe ? '#6366f1' : (darkMode ? '#334155' : '#e2e8f0');
+
+    messageNodes.forEach((messageNode, index) => {
+      const bubbleNode = bubbleNodes[index];
+      if (messageNode && bubbleNode) {
+        bubbleNode.style.setProperty('--bubble-fill', fillColor);
+        bubbleNode.style.setProperty('--bubble-stroke', strokeColor);
+
+        messageNode.classList.add('bursting');
+        bubbleNode.classList.add('bursting');
+
+        createPopParticles(messageNode, bubbleNode, fillColor);
+        createSplashDroplets(messageNode, bubbleNode, fillColor);
+
+        setTimeout(() => {
+          if (messageNode) messageNode.classList.add('collapsing');
+        }, 980);
+      }
+    });
     
     setTimeout(async () => {
       try {
@@ -322,7 +584,7 @@ const Room = () => {
         setDeletingMessage(null);
         setContextMenu({ visible: false, x: 0, y: 0, message: null });
       }
-    }, 500);
+    }, 2140);
   };
 
   const handleContextMenu = (e, msg) => {
@@ -381,7 +643,7 @@ const Room = () => {
     { id: 'profile', icon: User, label: 'ПРОФИЛЬ', action: () => navigate(`/profile/${userProfile?.username}`) },
     { id: 'contacts', icon: Users, label: 'КОНТАКТЫ', action: () => {} },
     { id: 'calls', icon: Phone, label: 'ЗВОНКИ', action: () => {} },
-    { id: 'saved', icon: Archive, label: 'СОХР.', action: () => {} },
+    { id: 'saved', icon: Archive, label: 'АРХИВ', action: () => {} },
     { id: 'settings', icon: Settings, label: 'НАСТРОЙКИ', action: () => navigate('/settings') },
     { id: 'theme', icon: darkMode ? Sun : Moon, label: darkMode ? 'СВЕТЛАЯ ТЕМА' : 'ТЁМНАЯ ТЕМА', action: () => setDarkMode(!darkMode) },
   ];
@@ -469,13 +731,12 @@ const Room = () => {
   if (isMobile) {
     return (
       <div className="flex flex-col h-screen overflow-hidden bg-gray-100 dark:bg-[#020617]">
-        {/* Фоновые эффекты */}
+        <style>{BURST_ANIMATION_CSS}</style>
         <div className="fixed inset-0 pointer-events-none z-0">
           <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 10, repeat: Infinity }} className="absolute -top-20 -left-20 w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px]" />
           <motion.div className="absolute -bottom-20 -right-20 w-[30rem] h-[30rem] bg-purple-600/10 rounded-full blur-[120px]" />
         </div>
 
-        {/* Верхний хедер (только на главных экранах) */}
         {(!selectedContact || showMobileChatList) && (
           <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800 px-4 py-3 shrink-0 relative z-20">
             <div className="flex items-center gap-3">
@@ -489,9 +750,7 @@ const Room = () => {
           </div>
         )}
 
-        {/* Основной контент */}
         <div className="flex-1 flex flex-col relative z-20 overflow-hidden">
-          {/* Список чатов */}
           {activeMobileTab === 'chats' && showMobileChatList && (
             <div className="flex-1 flex flex-col bg-white/90 dark:bg-slate-900/90 backdrop-blur-md overflow-hidden">
               <div className="p-4 border-b border-gray-200 dark:border-slate-800 shrink-0">
@@ -507,7 +766,7 @@ const Room = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 {searchQuery.trim() ? (
                   <>
                     <div className="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800/30">
@@ -577,11 +836,11 @@ const Room = () => {
                               <span className="text-xs font-black uppercase tracking-wider text-indigo-500">@{contact.username}</span>
                             </div>
                             <div className="mt-1 flex items-center justify-between gap-2">
-                              <p className={`text-xs font-bold truncate flex-1 ${
+                              <p className={`text-xs font-bold truncate flex-1 ${(
                                 unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id 
                                   ? 'text-gray-900 dark:text-white' 
                                   : 'text-gray-500 dark:text-gray-400'
-                              }`}>
+                              )}`}>
                                 {lastMsg?.sender_id === user?.user_id ? `Вы: ${lastMsgText}` : lastMsgText}
                               </p>
                               {lastMsgTime && (
@@ -614,9 +873,8 @@ const Room = () => {
             </div>
           )}
 
-          {/* Контакты */}
           {activeMobileTab === 'contacts' && (
-            <div className="flex-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md overflow-y-auto">
+            <div className="flex-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md overflow-y-auto overflow-x-hidden">
               <div className="px-4 py-3 bg-gray-100 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700">
                 <Users size={14} className="inline text-indigo-600 mr-2" />
                 <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">ВСЕ КОНТАКТЫ • {allUsers.filter(u => u.user_id !== user.user_id).length}</span>
@@ -647,10 +905,8 @@ const Room = () => {
             </div>
           )}
 
-          {/* ЭКРАН ЧАТА */}
           {selectedContact && activeMobileTab === 'chats' && !showMobileChatList && (
             <div className="flex-1 flex flex-col bg-white/50 dark:bg-slate-900/50 overflow-hidden">
-              {/* Хедер чата */}
               <div className="h-14 flex items-center px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-slate-800 shrink-0">
                 <button 
                   onClick={() => { setShowMobileChatList(true); setSelectedContact(null); }}
@@ -679,25 +935,25 @@ const Room = () => {
                 </button>
               </div>
 
-              {/* Сообщения */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-3">
                 <AnimatePresence mode="popLayout">
                   {messages.map((msg) => {
                     const isMe = msg.sender_id === user?.user_id;
-                    const isDeleting = deletingMessage === msg.id;
 
                     return (
                       <motion.div 
                         key={msg.id}
+                        id={`msg-${msg.id}`}
                         layout
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, scale: 0 }}
-                        className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} relative group`}
+                        className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} relative group message-container`}
                         onContextMenu={(e) => handleContextMenu(e, msg)}
                       >
                         <div 
-                          className={`relative max-w-[85%] shadow-lg transition-all overflow-hidden ${
+                          id={`bubble-${msg.id}`}
+                          className={`relative max-w-[85%] shadow-lg transition-all overflow-hidden bubble-wrapper ${
                             isMe 
                               ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-md' 
                               : 'bg-white border border-gray-200 text-gray-900 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 rounded-2xl rounded-tl-md'
@@ -736,35 +992,6 @@ const Room = () => {
                               </div>
                             </div>
                           </div>
-
-                          {isDeleting && (
-                            <motion.div
-                              initial={{ clipPath: 'inset(0% 0% 100% 0%)', backgroundColor: '#ef4444' }}
-                              animate={{ 
-                                clipPath: [
-                                  'inset(0% 0% 100% 0%)',
-                                  'inset(0% 0% 0% 0%)',
-                                  'inset(0% 0% 0% 0%)',
-                                  'inset(100% 0% 0% 0%)'
-                                ]
-                              }}
-                              transition={{ 
-                                duration: 0.5, 
-                                times: [0, 0.3, 0.7, 1],
-                                ease: "easeInOut" 
-                              }}
-                              style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                height: '100%',
-                                borderRadius: '16px',
-                                zIndex: 5,
-                                pointerEvents: 'none'
-                              }}
-                            />
-                          )}
                         </div>
                       </motion.div>
                     );
@@ -773,7 +1000,6 @@ const Room = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* ПОЛЕ ВВОДА СООБЩЕНИЯ - ФИКСИРОВАНО ВНИЗУ */}
               <div className="shrink-0 p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-gray-200 dark:border-slate-800">
                 <AnimatePresence>
                   {replyingTo && (
@@ -848,7 +1074,6 @@ const Room = () => {
             </div>
           )}
 
-          {/* Пустой чат */}
           {!selectedContact && activeMobileTab === 'chats' && !showMobileChatList && (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
               <motion.div animate={{ rotate: [0, 5, 0, -5, 0], scale: [1, 1.05, 1] }} transition={{ duration: 6, repeat: Infinity }} className="w-32 h-32 bg-white dark:bg-slate-800 rounded-[40px] flex items-center justify-center mb-4 shadow-2xl border-4 border-gray-200 dark:border-slate-700">
@@ -866,7 +1091,6 @@ const Room = () => {
           )}
         </div>
 
-        {/* Нижнее меню */}
         <div className="shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-gray-200 dark:border-slate-800 flex items-center justify-around py-2 relative z-50" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
           {mobileBottomTabs.map((tab) => {
             const Icon = tab.icon;
@@ -903,6 +1127,7 @@ const Room = () => {
   // ==================== ДЕСКТОПНАЯ ВЕРСИЯ ====================
   return (
     <div className={`flex h-screen overflow-hidden ${darkMode ? 'dark bg-[#020617]' : 'bg-gray-100'}`}>
+      <style>{BURST_ANIMATION_CSS}</style>
       <div className="fixed inset-0 pointer-events-none z-0">
         <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 10, repeat: Infinity }} className="absolute -top-20 -left-20 w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px]" />
         <motion.div className="absolute -bottom-20 -right-20 w-[30rem] h-[30rem] bg-purple-600/10 rounded-full blur-[120px]" />
@@ -1003,7 +1228,7 @@ const Room = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto py-2">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden py-2">
             {searchQuery.trim() ? (
               <>
                 <div className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800/30 flex items-center gap-2 sticky top-0 z-10">
@@ -1157,15 +1382,15 @@ const Room = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar flex flex-col">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 space-y-4 flex flex-col">
                 <AnimatePresence mode="popLayout">
                   {messages.map((msg) => {
                     const isMe = msg.sender_id === user?.user_id;
-                    const isDeleting = deletingMessage === msg.id;
 
                     return (
                       <motion.div 
                         key={msg.id}
+                        id={`msg-${msg.id}`}
                         layout
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1174,11 +1399,12 @@ const Room = () => {
                           scale: 0,
                           transition: { duration: 0.2 }
                         }}
-                        className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} relative group`}
+                        className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} relative group message-container`}
                         onContextMenu={(e) => handleContextMenu(e, msg)}
                       >
                         <div 
-                          className={`relative max-w-[75%] shadow-lg transition-all overflow-hidden ${
+                          id={`bubble-${msg.id}`}
+                          className={`relative max-w-[75%] shadow-lg transition-all overflow-hidden bubble-wrapper ${
                             isMe 
                               ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-md' 
                               : 'bg-white border border-gray-200 text-gray-900 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 rounded-2xl rounded-tl-md'
@@ -1217,35 +1443,6 @@ const Room = () => {
                               </div>
                             </div>
                           </div>
-
-                          {isDeleting && (
-                            <motion.div
-                              initial={{ clipPath: 'inset(0% 0% 100% 0%)', backgroundColor: '#ef4444' }}
-                              animate={{ 
-                                clipPath: [
-                                  'inset(0% 0% 100% 0%)',
-                                  'inset(0% 0% 0% 0%)',
-                                  'inset(0% 0% 0% 0%)',
-                                  'inset(100% 0% 0% 0%)'
-                                ]
-                              }}
-                              transition={{ 
-                                duration: 0.5, 
-                                times: [0, 0.3, 0.7, 1],
-                                ease: "easeInOut" 
-                              }}
-                              style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                height: '100%',
-                                borderRadius: '18px',
-                                zIndex: 5,
-                                pointerEvents: 'none'
-                              }}
-                            />
-                          )}
                         </div>
                       </motion.div>
                     );

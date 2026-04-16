@@ -4,52 +4,82 @@ import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Получить посты пользователя
 router.get('/user/:userId', authenticate, async (req, res) => {
   const { userId } = req.params;
   
   try {
     const posts = await pool.query(
-      `SELECT * FROM posts 
-       WHERE author_id = $1 
-       ORDER BY is_pinned DESC, pinned_at DESC, created_at DESC
+      `SELECT p.*, 
+              pr.avatar_url as current_avatar_url
+       FROM posts p
+       LEFT JOIN profiles pr ON p.author_id = pr.user_id
+       WHERE p.author_id = $1 
+       ORDER BY p.is_pinned DESC, p.pinned_at DESC, p.created_at DESC
        LIMIT 50`,
       [userId]
     );
     
+    // Получить комментарии для каждого поста с актуальными аватарами
     const postsWithComments = await Promise.all(
       posts.rows.map(async (post) => {
         const comments = await pool.query(
-          `SELECT * FROM comments 
-           WHERE post_id = $1 
-           ORDER BY created_at ASC`,
+          `SELECT c.*, 
+                  pr.avatar_url as current_author_avatar
+           FROM comments c
+           LEFT JOIN profiles pr ON c.author_id = pr.user_id
+           WHERE c.post_id = $1 
+           ORDER BY c.created_at ASC`,
           [post.id]
         );
-        return { ...post, comments: comments.rows };
+        
+        // Используем актуальный аватар из профиля
+        return { 
+          ...post, 
+          author_avatar: post.current_avatar_url || post.author_avatar,
+          comments: comments.rows.map(c => ({
+            ...c,
+            author_avatar: c.current_author_avatar || c.author_avatar
+          }))
+        };
       })
     );
     
     res.json(postsWithComments);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in getUserPosts:', error);
+    res.status(500).json([]);
   }
 });
 
+// Создать пост
 router.post('/', authenticate, async (req, res) => {
   const { authorId, authorName, authorUsername, authorAvatar, content, imageUrl } = req.body;
+  const userId = req.userId;
   
   try {
+    // Получаем актуальный аватар из профиля
+    const profile = await pool.query(
+      'SELECT avatar_url FROM profiles WHERE user_id = $1',
+      [authorId]
+    );
+    
+    const currentAvatar = profile.rows[0]?.avatar_url || authorAvatar;
+    
     const result = await pool.query(
       `INSERT INTO posts (author_id, author_name, author_username, author_avatar, content, image_url)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [authorId, authorName, authorUsername, authorAvatar, content, imageUrl]
+      [authorId, authorName, authorUsername, currentAvatar, content, imageUrl]
     );
     res.status(201).json({ ...result.rows[0], comments: [] });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in createPost:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
+// Обновить пост
 router.put('/:postId', authenticate, async (req, res) => {
   const { postId } = req.params;
   const { content, isPinned } = req.body;
@@ -78,10 +108,12 @@ router.put('/:postId', authenticate, async (req, res) => {
     
     res.json(result.rows[0]);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in updatePost:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
+// Удалить пост
 router.delete('/:postId', authenticate, async (req, res) => {
   const { postId } = req.params;
   const userId = req.userId;
@@ -98,10 +130,12 @@ router.delete('/:postId', authenticate, async (req, res) => {
     
     res.json({ message: 'Post deleted' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in deletePost:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
+// Лайкнуть/убрать лайк
 router.post('/:postId/like', authenticate, async (req, res) => {
   const { postId } = req.params;
   const userId = req.userId;
@@ -118,10 +152,12 @@ router.post('/:postId/like', authenticate, async (req, res) => {
     await pool.query('UPDATE posts SET likes = $1 WHERE id = $2', [newLikes, postId]);
     res.json({ likes: newLikes, hasLiked: !hasLiked });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in likePost:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
+// Добавить комментарий
 router.post('/:postId/comments', authenticate, async (req, res) => {
   const { postId } = req.params;
   const { authorId, authorName, authorAvatar, content, replyToId, replyToAuthor } = req.body;
@@ -131,11 +167,19 @@ router.post('/:postId/comments', authenticate, async (req, res) => {
   try {
     await client.query('BEGIN');
     
+    // Получаем актуальный аватар из профиля
+    const profile = await client.query(
+      'SELECT avatar_url FROM profiles WHERE user_id = $1',
+      [authorId]
+    );
+    
+    const currentAvatar = profile.rows[0]?.avatar_url || authorAvatar;
+    
     const result = await client.query(
       `INSERT INTO comments (post_id, author_id, author_name, author_avatar, content, reply_to, reply_to_author)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [postId, authorId, authorName, authorAvatar, content, replyToId, replyToAuthor]
+      [postId, authorId, authorName, currentAvatar, content, replyToId, replyToAuthor]
     );
     
     await client.query(
@@ -147,12 +191,14 @@ router.post('/:postId/comments', authenticate, async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (error) {
     await client.query('ROLLBACK');
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in addComment:', error);
+    res.status(500).json({ error: error.message });
   } finally {
     client.release();
   }
 });
 
+// Удалить комментарий
 router.delete('/comments/:commentId', authenticate, async (req, res) => {
   const { commentId } = req.params;
   const userId = req.userId;
@@ -187,7 +233,8 @@ router.delete('/comments/:commentId', authenticate, async (req, res) => {
     res.json({ message: 'Comment deleted' });
   } catch (error) {
     await client.query('ROLLBACK');
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in deleteComment:', error);
+    res.status(500).json({ error: error.message });
   } finally {
     client.release();
   }

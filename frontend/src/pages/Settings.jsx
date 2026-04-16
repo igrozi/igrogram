@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 
 const heartBeat = { scale: [1, 1.2, 1], transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" } };
-const floatingHigh = { y: [0, -10, 0], transition: { duration: 2.5, repeat: Infinity, ease: "easeInOut" } };
 
 const formatPhoneNumber = (value) => {
   if (!value) return '';
@@ -26,31 +25,13 @@ const formatPhoneNumber = (value) => {
   return result;
 };
 
-const AnimatedTitle = ({ text }) => (
-  <div className="flex">
-    {Array.from(text).map((char, i) => (
-      <motion.span
-        key={i}
-        animate={{ 
-          opacity: [0.4, 1, 0.4], 
-          textShadow: ["0px 0px 0px rgba(79,70,229,0)", "0px 0px 10px rgba(79,70,229,0.8)", "0px 0px 0px rgba(79,70,229,0)"] 
-        }}
-        transition={{ duration: 2, repeat: Infinity, delay: i * 0.1 }}
-        className="inline-block"
-      >
-        {char === " " ? "\u00A0" : char}
-      </motion.span>
-    ))}
-  </div>
-);
-
 const SectionHeader = ({ icon: Icon, text, animate = heartBeat }) => (
   <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-10 relative z-10">
     <motion.div animate={animate} className="bg-indigo-600 p-2 md:p-2.5 rounded-xl md:rounded-2xl shadow-[0_0_20px_rgba(79,70,229,0.5)]">
       <Icon size={20} className="md:size-6 text-white fill-current" />
     </motion.div>
     <div className="text-lg md:text-2xl font-black text-gray-900 dark:text-white tracking-widest uppercase">
-      <AnimatedTitle text={text} />
+        <span>{text}</span>
     </div>
   </div>
 );
@@ -238,7 +219,7 @@ const Settings = () => {
         {/* Header */}
         <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800 px-4 py-3">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)} className="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl">
+            <button onClick={() => navigate(-1)} className="p-2 bg-gray-100 dark:bg-slate-800 rounded-xl mb-10">
               <ArrowLeft size={20} className="dark:text-white" />
             </button>
             <div className="flex items-center gap-2">
@@ -573,7 +554,7 @@ const Settings = () => {
                 <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.07] pointer-events-none">
                   <Cpu size={180} />
                 </div>
-                <SectionHeader icon={User} text="ЛИЧНЫЕ ДАННЫЕ" animate={floatingHigh} />
+                <SectionHeader icon={User} text="ЛИЧНЫЕ ДАННЫЕ" animate={heartBeat} />
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                   <div className="flex flex-col">
