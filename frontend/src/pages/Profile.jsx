@@ -628,7 +628,7 @@ const Profile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4">
             <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[3.5rem] p-10 text-center shadow-2xl sticky top-10">
-              <div className="relative w-44 h-44 mx-auto mb-8">
+              <div className="relative w-44 h-44 mx-auto mb-5">
                 <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 rounded-full" />
                 <img 
                   src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.name || 'User'}&background=4f46e5&color=fff&size=512`} 
@@ -641,19 +641,18 @@ const Profile = () => {
                 />
               </div>
 
-              <h1 className="text-4xl font-black tracking-tighter mb-2 dark:text-white text-gray-900">
-                <AnimatedTitle text={profile?.name || "Пользователь"} />
+              <h1 className="text-4xl font-black tracking-tighter dark:text-white text-gray-900">
+                {profile?.name || "Пользователь"}
               </h1>
               
-              {/* Онлайн статус ПОД username */}
-              <div className="flex items-center justify-center gap-2 mb-6">
+              <p className="text-indigo-600 dark:text-indigo-400 font-bold text-sm tracking-widest mb-2 opacity-80">@{profile?.username}</p>
+
+              <div className="flex items-center justify-center gap-2 mb-2">
                 <div className={`w-2 h-2 rounded-full ${checkIsOnline(profile) ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-slate-600'}`} />
-                <span className={`text-[10px] font-black tracking-wider uppercase ${checkIsOnline(profile) ? 'text-green-600 dark:text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                <span className={`text-[12px] font-black tracking-wider uppercase ${checkIsOnline(profile) ? 'text-green-600 dark:text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
                   {checkIsOnline(profile) ? 'Онлайн' : formatLastSeen(profile?.last_seen)}
                 </span>
               </div>
-              
-              <p className="text-indigo-600 dark:text-indigo-400 font-bold text-sm tracking-widest mb-8 uppercase opacity-80">@{profile?.username}</p>
 
               {!isOwnProfile && user && (
                 <div className="bg-gray-50 dark:bg-slate-800/40 rounded-[2.5rem] p-6 mb-8 border-2 border-gray-200 dark:border-slate-700/50 backdrop-blur-sm shadow-inner">
@@ -688,7 +687,7 @@ const Profile = () => {
                       value={newBio} 
                       onChange={(e) => setNewBio(e.target.value)} 
                       placeholder="Расскажите о себе..." 
-                      className="w-full bg-white dark:bg-slate-800/50 border-2 border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-900 dark:text-white resize-none h-32 outline-none focus:border-indigo-500" 
+                      className="w-full uppercase bg-white dark:bg-slate-800/50 border-2 border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-500 dark:text-white resize-none h-32 outline-none focus:border-indigo-500 text-xs" 
                       maxLength={250} 
                     />
                     <div className="flex gap-2">
@@ -772,9 +771,9 @@ const Profile = () => {
 
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                      <span className="text-gray-500 dark:text-slate-500 text-sm font-bold">{postText.length}/1000 символов</span>
+                      <span className="text-gray-500 dark:text-slate-500 text-sm font-bold uppercase">{postText.length}/1000</span>
                       <button onClick={() => fileInputRef.current?.click()} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 flex items-center gap-2 font-bold transition-colors cursor-pointer">
-                        <ImageIcon size={18} /> Фото
+                        <ImageIcon size={18} /> ИЗОБРАЖЕНИЕ
                       </button>
                       <input type="file" hidden ref={fileInputRef} onChange={handleImageSelect} accept="image/*" />
                     </div>
