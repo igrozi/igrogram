@@ -38,7 +38,7 @@ const formatDateWithTime = (dateString) => {
   });
 };
 
-// Компактная диаграмма оценок в стиле мессенджера
+// Компактная диаграмма оценок
 const CompactRatingChart = ({ stats, total, average, darkMode }) => {
   const [hoveredBar, setHoveredBar] = useState(null);
   const [animated, setAnimated] = useState(false);
@@ -62,12 +62,12 @@ const CompactRatingChart = ({ stats, total, average, darkMode }) => {
 
   if (total === 0) {
     return (
-      <div className="mt-6 p-6 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-[2.5rem] shadow-xl">
+      <div className="mt-6 p-4 sm:p-6 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-indigo-600 rounded-xl">
             <BarChart3 size={16} className="text-white" />
           </div>
-          <h3 className="font-black text-sm uppercase tracking-wider text-gray-600 dark:text-slate-400">
+          <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-slate-400">
             Статистика оценок
           </h3>
         </div>
@@ -83,38 +83,36 @@ const CompactRatingChart = ({ stats, total, average, darkMode }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="mt-6 p-6 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-[2.5rem] shadow-xl"
+      className="mt-6 p-4 sm:p-6 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl"
     >
-      {/* Заголовок */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/20">
             <BarChart3 size={16} className="text-white" />
           </div>
-          <h3 className="font-black text-sm uppercase tracking-wider text-gray-600 dark:text-slate-400">
+          <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-slate-400">
             Статистика оценок
           </h3>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-1.5">
             <Users size={12} className="text-indigo-400 dark:text-indigo-500" />
-            <span className="text-xs font-bold text-gray-500 dark:text-slate-400">
+            <span className="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-slate-400">
               {total}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/30 rounded-full border border-indigo-200 dark:border-indigo-800/50">
+          <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-indigo-50 dark:bg-indigo-950/30 rounded-full border border-indigo-200 dark:border-indigo-800/50">
             <Star size={12} className="text-indigo-500 fill-indigo-500" />
-            <span className="text-base font-black text-gray-900 dark:text-white">
+            <span className="text-sm sm:text-base font-black text-gray-900 dark:text-white">
               {average.toFixed(1)}
             </span>
-            <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500">/5</span>
+            <span className="text-[8px] sm:text-[10px] font-bold text-gray-400 dark:text-slate-500">/5</span>
           </div>
         </div>
       </div>
 
-      {/* Диаграмма */}
-      <div className="space-y-2">
+      <div className="space-y-1.5 sm:space-y-2">
         {ratings.map((rating, index) => (
           <motion.div
             key={rating.stars}
@@ -125,16 +123,16 @@ const CompactRatingChart = ({ stats, total, average, darkMode }) => {
             onMouseEnter={() => setHoveredBar(rating.stars)}
             onMouseLeave={() => setHoveredBar(null)}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 w-12">
-                <span className="text-xs font-black text-gray-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-1 sm:gap-1.5 w-10 sm:w-12">
+                <span className="text-[10px] sm:text-xs font-black text-gray-500 dark:text-slate-400">
                   {rating.stars}
                 </span>
                 <Star size={12} className="text-indigo-400 fill-indigo-400" />
               </div>
 
               <div className="flex-1">
-                <div className="relative h-7 rounded-xl overflow-hidden bg-gray-100 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50">
+                <div className="relative h-6 sm:h-7 rounded-lg sm:rounded-xl overflow-hidden bg-gray-100 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={animated ? { width: `${getPercentage(rating.count)}%` } : { width: 0 }}
@@ -142,8 +140,8 @@ const CompactRatingChart = ({ stats, total, average, darkMode }) => {
                     className={`absolute inset-y-0 left-0 bg-gradient-to-r ${rating.color} shadow-md`}
                   />
                   
-                  <div className="absolute inset-0 flex items-center justify-between px-3">
-                    <span className="text-xs font-bold text-gray-700 dark:text-slate-300 z-10">
+                  <div className="absolute inset-0 flex items-center justify-between px-2 sm:px-3">
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-700 dark:text-slate-300 z-10">
                       {rating.count}
                     </span>
                     <AnimatePresence>
@@ -152,7 +150,7 @@ const CompactRatingChart = ({ stats, total, average, darkMode }) => {
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.8 }}
-                          className="text-[10px] font-black text-gray-500 dark:text-slate-400 z-10 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-full"
+                          className="text-[8px] sm:text-[10px] font-black text-gray-500 dark:text-slate-400 z-10 bg-white/80 dark:bg-slate-900/80 px-1.5 sm:px-2 py-0.5 rounded-full"
                         >
                           {getPercentage(rating.count).toFixed(0)}%
                         </motion.span>
@@ -166,22 +164,21 @@ const CompactRatingChart = ({ stats, total, average, darkMode }) => {
         ))}
       </div>
 
-      {/* Мини-статистика */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-800">
         <div className="grid grid-cols-2 gap-2">
           <div className="text-center p-2 bg-indigo-50 dark:bg-indigo-950/20 rounded-xl">
-            <div className="text-lg font-black text-indigo-600 dark:text-indigo-400">
+            <div className="text-base sm:text-lg font-black text-indigo-600 dark:text-indigo-400">
               {ratings.reduce((max, r) => r.count > max ? r.count : max, 0)}
             </div>
-            <div className="text-[9px] font-black uppercase text-gray-400 dark:text-slate-500 tracking-wider">
+            <div className="text-[8px] sm:text-[9px] font-black uppercase text-gray-400 dark:text-slate-500 tracking-wider">
               Макс. голосов
             </div>
           </div>
           <div className="text-center p-2 bg-indigo-50 dark:bg-indigo-950/20 rounded-xl">
-            <div className="text-lg font-black text-indigo-600 dark:text-indigo-400">
+            <div className="text-base sm:text-lg font-black text-indigo-600 dark:text-indigo-400">
               {((stats[5] || 0) + (stats[4] || 0))}
             </div>
-            <div className="text-[9px] font-black uppercase text-gray-400 dark:text-slate-500 tracking-wider">
+            <div className="text-[8px] sm:text-[9px] font-black uppercase text-gray-400 dark:text-slate-500 tracking-wider">
               4-5 звёзд
             </div>
           </div>
@@ -551,17 +548,17 @@ const Profile = () => {
     };
     
     return (
-      <div className={`p-8 bg-gray-50 dark:bg-slate-800/20 border-2 ${isPinned ? 'border-yellow-500/60 bg-yellow-500/5' : 'border-gray-200 dark:border-slate-800/60'} rounded-[3rem] transition-all group shadow-sm hover:shadow-md`}>
+      <div className={`p-4 sm:p-8 bg-gray-50 dark:bg-slate-800/20 border-2 ${isPinned ? 'border-yellow-500/60 bg-yellow-500/5' : 'border-gray-200 dark:border-slate-800/60'} rounded-[2rem] sm:rounded-[3rem] transition-all group shadow-sm hover:shadow-md`}>
         {isPinned && (
           <div className="flex items-center gap-2 mb-4 text-yellow-500">
             <Pin size={16} />
             <span className="text-xs font-black uppercase tracking-wider">Закреплено</span>
           </div>
         )}
-        <div className="flex items-start gap-4 mb-4">
+        <div className="flex items-start gap-3 sm:gap-4 mb-4">
           <img 
             src={actualAvatar || `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`} 
-            className="w-14 h-14 rounded-2xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm" 
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm" 
             alt={post.author_name}
             onError={(e) => {
               e.target.onerror = null;
@@ -571,11 +568,11 @@ const Profile = () => {
           <div className="flex-1">
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-black text-xl dark:text-white text-gray-900">{post.author_name}</h4>
-                <p className="text-indigo-600 dark:text-indigo-400 text-sm font-bold">@{post.author_username}</p>
+                <h4 className="font-black text-lg sm:text-xl dark:text-white text-gray-900">{post.author_name}</h4>
+                <p className="text-indigo-600 dark:text-indigo-400 text-xs sm:text-sm font-bold">@{post.author_username}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 dark:text-slate-500 text-xs font-medium">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="text-gray-500 dark:text-slate-500 text-[10px] sm:text-xs font-medium">
                   {formatDateWithTime(post.created_at)}
                 </span>
                 {user && post.author_id === user.user_id && (
@@ -593,9 +590,9 @@ const Profile = () => {
           </div>
         </div>
         
-        {post.content && <p className="dark:text-white text-gray-800 text-lg mb-6 whitespace-pre-wrap font-bold">{post.content}</p>}
+        {post.content && <p className="dark:text-white text-gray-800 text-base sm:text-lg mb-6 whitespace-pre-wrap font-bold">{post.content}</p>}
         {post.image_url && (
-          <div className="mb-6 rounded-[2rem] overflow-hidden border-2 border-gray-200 dark:border-slate-700/50 shadow-md">
+          <div className="mb-6 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-2 border-gray-200 dark:border-slate-700/50 shadow-md">
             <img 
               src={post.image_url} 
               alt="Прикрепленное медиа" 
@@ -608,17 +605,17 @@ const Profile = () => {
           </div>
         )}
         
-        <div className="flex items-center gap-6 pt-4 border-t border-gray-200 dark:border-slate-700/50">
+        <div className="flex items-center gap-4 sm:gap-6 pt-4 border-t border-gray-200 dark:border-slate-700/50">
           <button 
             onClick={() => handleLikePost(post.id, post.likes || [])} 
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold cursor-pointer ${post.likes?.includes(user?.user_id) ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-slate-800'}`}
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all font-bold cursor-pointer text-sm ${post.likes?.includes(user?.user_id) ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-slate-800'}`}
           >
             <Heart size={20} fill={post.likes?.includes(user?.user_id) ? "#ef4444" : "none"} className={post.likes?.includes(user?.user_id) ? "text-red-500" : "text-gray-400 dark:text-slate-400"} />
             <span>{(post.likes || []).length}</span>
           </button>
           <button 
             onClick={() => setShowComments(prev => ({...prev, [post.id]: !prev[post.id]}))} 
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold cursor-pointer ${isCommentsOpen ? 'bg-blue-500/10 text-blue-500 dark:text-blue-400 hover:bg-blue-500/20 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-blue-500 hover:bg-gray-200 dark:hover:bg-slate-800'}`}
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all font-bold cursor-pointer text-sm ${isCommentsOpen ? 'bg-blue-500/10 text-blue-500 dark:text-blue-400 hover:bg-blue-500/20 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-blue-500 hover:bg-gray-200 dark:hover:bg-slate-800'}`}
           >
             <MessageSquare size={20} />
             <span>{post.comments_count || 0}</span>
@@ -654,7 +651,7 @@ const Profile = () => {
                 <div className="mb-6 flex gap-3">
                   <img 
                     src={currentUserProfile?.avatar_url || `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`} 
-                    className="w-10 h-10 rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm" 
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm" 
                     alt="Ваш аватар"
                     onError={(e) => {
                       e.target.onerror = null;
@@ -672,12 +669,12 @@ const Profile = () => {
                           handleAddCommentLocal();
                         } 
                       }} 
-                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-2 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-xs" 
+                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-3 sm:px-4 py-2 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-[10px] sm:placeholder:text-xs text-sm" 
                     />
                     <button 
                       onClick={handleAddCommentLocal}
                       disabled={isAddingComment}
-                      className="px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-sm"
+                      className="px-4 sm:px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-xs sm:text-sm"
                     >
                       {isAddingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                     </button>
@@ -689,10 +686,10 @@ const Profile = () => {
                 {(post.comments || []).map(comment => {
                   const isReply = comment.reply_to;
                   return (
-                    <div key={comment.id} className={`flex gap-3 group ${isReply ? 'ml-8' : ''}`}>
+                    <div key={comment.id} className={`flex gap-2 sm:gap-3 group ${isReply ? 'ml-4 sm:ml-8' : ''}`}>
                       <img 
                         src={comment.author_avatar || `https://ui-avatars.com/api/?name=${comment.author_name}&background=4f46e5&color=fff&size=64`} 
-                        className="w-8 h-8 rounded-lg object-cover shadow-sm border border-gray-200 dark:border-slate-700" 
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover shadow-sm border border-gray-200 dark:border-slate-700" 
                         alt={comment.author_name}
                         onError={(e) => {
                           e.target.onerror = null;
@@ -701,16 +698,16 @@ const Profile = () => {
                       />
                       <div className="flex-1 bg-gray-100 dark:bg-slate-800/30 rounded-xl p-3 border border-gray-200 dark:border-slate-700/30 shadow-sm">
                         <div className="flex justify-between items-start mb-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-sm dark:text-white text-gray-900">{comment.author_name}</span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-xs sm:text-sm dark:text-white text-gray-900">{comment.author_name}</span>
                             {comment.reply_to_author && (
-                              <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1">
+                              <span className="text-[10px] sm:text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1">
                                 <Reply size={10} /> {comment.reply_to_author}
                               </span>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-gray-500 dark:text-slate-500 font-medium">
+                            <span className="text-[8px] sm:text-[10px] text-gray-500 dark:text-slate-500 font-medium">
                               {formatDateWithTime(comment.created_at)}
                             </span>
                             {user && (comment.author_id === user.user_id || isOwnProfile) && (
@@ -729,7 +726,7 @@ const Profile = () => {
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-gray-700 dark:text-slate-300 font-medium">{comment.content}</p>
+                        <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 font-medium">{comment.content}</p>
                       </div>
                     </div>
                   );
@@ -788,6 +785,19 @@ const Profile = () => {
           animation: gradientShift 15s ease infinite; 
           opacity: 0.8; 
         }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #475569;
+        }
       `}</style>
       <div className="animated-bg" />
       
@@ -795,21 +805,21 @@ const Profile = () => {
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
-        <header className="flex justify-between items-center mb-12">
-          <button onClick={() => navigate(-1)} className="p-4 bg-white/80 dark:bg-slate-900/50 border-2 border-gray-300 dark:border-slate-800 rounded-3xl hover:border-indigo-500 transition-all shadow-xl hover:scale-105 cursor-pointer backdrop-blur-sm">
-            <ChevronLeft className="dark:text-white text-gray-600" />
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <header className="flex justify-between items-center mb-6 sm:mb-12">
+          <button onClick={() => navigate(-1)} className="p-3 sm:p-4 bg-white/80 dark:bg-slate-900/50 border-2 border-gray-300 dark:border-slate-800 rounded-2xl sm:rounded-3xl hover:border-indigo-500 transition-all shadow-xl hover:scale-105 cursor-pointer backdrop-blur-sm">
+            <ChevronLeft className="dark:text-white text-gray-600" size={24} />
           </button>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10">
           <div className="lg:col-span-4">
-            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[3.5rem] p-10 text-center shadow-2xl">
-              <div className="relative w-44 h-44 mx-auto mb-5">
+            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[2.5rem] sm:rounded-[3.5rem] p-6 sm:p-10 text-center shadow-2xl">
+              <div className="relative w-32 h-32 sm:w-44 sm:h-44 mx-auto mb-4 sm:mb-5">
                 <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 rounded-full" />
                 <img 
                   src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.name || 'User'}&background=4f46e5&color=fff&size=512`} 
-                  className="w-full h-full object-cover rounded-[3rem] border-4 border-gray-100 dark:border-slate-700 relative z-10 shadow-2xl" 
+                  className="w-full h-full object-cover rounded-[2rem] sm:rounded-[3rem] border-4 border-gray-100 dark:border-slate-700 relative z-10 shadow-2xl" 
                   alt={profile?.name}
                   onError={(e) => {
                     e.target.onerror = null;
@@ -818,36 +828,36 @@ const Profile = () => {
                 />
               </div>
 
-              <h1 className="text-4xl font-black tracking-tighter dark:text-white text-gray-900">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tighter dark:text-white text-gray-900">
                 {profile?.name || "Пользователь"}
               </h1>
               
-              <p className="text-indigo-600 dark:text-indigo-400 font-bold text-sm tracking-widest mb-2 opacity-80">@{profile?.username}</p>
+              <p className="text-indigo-600 dark:text-indigo-400 font-bold text-xs sm:text-sm tracking-widest mb-2 opacity-80">@{profile?.username}</p>
 
               <div className="flex items-center justify-center gap-2 mb-2">
                 <div className={`w-2 h-2 rounded-full ${checkIsOnline(profile) ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-slate-600'}`} />
-                <span className={`text-xs font-black tracking-wider uppercase ${checkIsOnline(profile) ? 'text-green-600 dark:text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                <span className={`text-[10px] sm:text-xs font-black tracking-wider uppercase ${checkIsOnline(profile) ? 'text-green-600 dark:text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
                   {checkIsOnline(profile) ? 'Онлайн' : formatLastSeen(profile?.last_seen)}
                 </span>
               </div>
 
               {!isOwnProfile && user && (
-                <div className="bg-gray-50 dark:bg-slate-800/40 rounded-[2.5rem] p-6 mb-8 border-2 border-gray-200 dark:border-slate-700/50 backdrop-blur-sm shadow-inner">
-                  <h3 className="text-sm font-black uppercase text-gray-500 dark:text-slate-400 mb-4">{hasVoted ? 'Ваша оценка' : 'Поставить оценку'}</h3>
+                <div className="bg-gray-50 dark:bg-slate-800/40 rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-gray-200 dark:border-slate-700/50 backdrop-blur-sm shadow-inner">
+                  <h3 className="text-xs sm:text-sm font-black uppercase text-gray-500 dark:text-slate-400 mb-3 sm:mb-4">{hasVoted ? 'Ваша оценка' : 'Поставить оценку'}</h3>
                   <RatingStars vote={myVote} onRate={handleRate} disabled={hasVoted} />
                   {hasVoted && <p className="text-xs text-gray-500 dark:text-slate-400 mt-3">Вы оценили на {myVote}/5</p>}
                 </div>
               )}
 
               {!isOwnProfile && user && (
-                <button onClick={goToChat} className="w-full py-5 text-white bg-indigo-600 rounded-[2rem] font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 group hover:scale-[1.02] active:scale-[0.98] mb-8 cursor-pointer text-base">
+                <button onClick={goToChat} className="w-full py-4 sm:py-5 text-white bg-indigo-600 rounded-[1.5rem] sm:rounded-[2rem] font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all flex items-center justify-center gap-2 sm:gap-3 group hover:scale-[1.02] active:scale-[0.98] mb-6 sm:mb-8 cursor-pointer text-sm sm:text-base">
                   <MessageCircle size={22} fill="currentColor" /> Написать сообщение
                 </button>
               )}
 
-              <div className="p-6 bg-gray-100/80 dark:bg-slate-950/50 rounded-3xl border-2 border-gray-200 dark:border-slate-800 shadow-inner">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-black uppercase text-gray-500 dark:text-slate-400">О себе</h3>
+              <div className="p-4 sm:p-6 bg-gray-100/80 dark:bg-slate-950/50 rounded-2xl sm:rounded-3xl border-2 border-gray-200 dark:border-slate-800 shadow-inner">
+                <div className="flex justify-between items-center mb-3 sm:mb-4">
+                  <h3 className="text-xs sm:text-sm font-black uppercase text-gray-500 dark:text-slate-400">О себе</h3>
                   {isOwnProfile && !editingBio && (
                     <button onClick={() => {
                       setEditingBio(true);
@@ -864,37 +874,36 @@ const Profile = () => {
                       value={newBio} 
                       onChange={(e) => setNewBio(e.target.value)} 
                       placeholder="РАССКАЖИТЕ О СЕБЕ..." 
-                      className="w-full bg-white dark:bg-slate-800/50 border-2 border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-500 dark:text-white resize-none h-32 outline-none focus:border-indigo-500 text-sm font-bold uppercase placeholder:font-black placeholder:text-gray-400 placeholder:tracking-wider" 
+                      className="w-full bg-white dark:bg-slate-800/50 border-2 border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-500 dark:text-white resize-none h-32 outline-none focus:border-indigo-500 text-xs sm:text-sm font-bold uppercase placeholder:font-black placeholder:text-gray-400 placeholder:tracking-wider" 
                       maxLength={250} 
                     />
                     <div className="flex gap-2">
-                      <button onClick={handleUpdateBio} disabled={isUpdatingBio} className="flex-1 text-white bg-indigo-600 hover:bg-indigo-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50 uppercase text-sm">
+                      <button onClick={handleUpdateBio} disabled={isUpdatingBio} className="flex-1 text-white bg-indigo-600 hover:bg-indigo-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50 uppercase text-xs sm:text-sm">
                         {isUpdatingBio ? <Loader2 size={20} className="animate-spin" /> : <Check size={24} />}
                       </button>
-                      <button onClick={() => { setEditingBio(false); setNewBio(profile?.bio || ""); }} className="flex-1 text-white bg-gray-800 hover:bg-gray-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer uppercase text-sm">
+                      <button onClick={() => { setEditingBio(false); setNewBio(profile?.bio || ""); }} className="flex-1 text-white bg-gray-800 hover:bg-gray-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer uppercase text-xs sm:text-sm">
                         <X size={24} />
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm font-bold text-gray-700 dark:text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
+                  <p className="text-xs sm:text-sm font-bold text-gray-700 dark:text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
                     {profile?.bio ? profile.bio : (isOwnProfile ? 
-                      <span className="text-gray-400 dark:text-slate-500 font-black uppercase text-xs tracking-wider">НАЖМИТЕ НА КАРАНДАШ, ЧТОБЫ ДОБАВИТЬ ИНФОРМАЦИЮ О СЕБЕ</span> : 
-                      <span className="text-gray-400 dark:text-slate-500 font-black uppercase text-xs tracking-wider">ПОЛЬЗОВАТЕЛЬ ЕЩЕ НЕ ДОБАВИЛ ИНФОРМАЦИЮ О СЕБЕ</span>
+                      <span className="text-gray-400 dark:text-slate-500 font-black uppercase text-[10px] sm:text-xs tracking-wider">НАЖМИТЕ НА КАРАНДАШ, ЧТОБЫ ДОБАВИТЬ ИНФОРМАЦИЮ О СЕБЕ</span> : 
+                      <span className="text-gray-400 dark:text-slate-500 font-black uppercase text-[10px] sm:text-xs tracking-wider">ПОЛЬЗОВАТЕЛЬ ЕЩЕ НЕ ДОБАВИЛ ИНФОРМАЦИЮ О СЕБЕ</span>
                     )}
                   </p>
                 )}
               </div>
               
-              <div className="mt-6 space-y-3">
+              <div className="mt-4 sm:mt-6 space-y-3">
                 <div className="flex items-center gap-3 text-gray-500 dark:text-slate-400 justify-center">
                   <Calendar size={16} />
-                  <span className="text-sm font-medium">Зарегистрирован: {new Date(profile?.created_at).toLocaleDateString('ru-RU')}</span>
+                  <span className="text-xs sm:text-sm font-medium">Зарегистрирован: {new Date(profile?.created_at).toLocaleDateString('ru-RU')}</span>
                 </div>
               </div>
             </div>
 
-            {/* ДИАГРАММА - ОТДЕЛЬНАЯ ПАНЕЛЬ ПОД КАРТОЧКОЙ ПРОФИЛЯ */}
             {isOwnProfile && (
               <CompactRatingChart 
                 stats={ratingStats}
@@ -905,80 +914,84 @@ const Profile = () => {
             )}
           </div>
           
-          <div className="lg:col-span-8 space-y-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
-                <Star size={24} className="text-yellow-500 mb-2" />
-                <span className="text-2xl font-black dark:text-white text-gray-900">{profile?.rating ? Number(profile.rating).toFixed(1) : '0.0'}</span>
-                <span className="text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Рейтинг</span>
-                <span className="text-[10px] font-medium text-gray-400 dark:text-slate-600">({profile?.rating_count || 0})</span>
+          <div className="lg:col-span-8 space-y-6 sm:space-y-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
+                <Star size={24} className="text-yellow-500 mb-1 sm:mb-2" />
+                <span className="text-xl sm:text-2xl font-black dark:text-white text-gray-900">{profile?.rating ? Number(profile.rating).toFixed(1) : '0.0'}</span>
+                <span className="text-[10px] sm:text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Рейтинг</span>
+                <span className="text-[8px] sm:text-[10px] font-medium text-gray-400 dark:text-slate-600">({profile?.rating_count || 0})</span>
               </div>
-              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
-                <MessageCircle size={24} className="text-blue-500 mb-2" />
-                <span className="text-2xl font-black dark:text-white text-gray-900">{allPosts.length}</span>
-                <span className="text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Посты</span>
+              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
+                <MessageCircle size={24} className="text-blue-500 mb-1 sm:mb-2" />
+                <span className="text-xl sm:text-2xl font-black dark:text-white text-gray-900">{allPosts.length}</span>
+                <span className="text-[10px] sm:text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Посты</span>
               </div>
-              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
-                <Heart size={24} className="text-red-500 mb-2" />
-                <span className="text-2xl font-black dark:text-white text-gray-900">{totalLikes}</span>
-                <span className="text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Лайки</span>
+              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
+                <Heart size={24} className="text-red-500 mb-1 sm:mb-2" />
+                <span className="text-xl sm:text-2xl font-black dark:text-white text-gray-900">{totalLikes}</span>
+                <span className="text-[10px] sm:text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Лайки</span>
               </div>
-              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
-                <MessageSquare size={24} className="text-purple-500 mb-2" />
-                <span className="text-2xl font-black dark:text-white text-gray-900">{totalComments}</span>
-                <span className="text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Комменты</span>
+              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
+                <MessageSquare size={24} className="text-purple-500 mb-1 sm:mb-2" />
+                <span className="text-xl sm:text-2xl font-black dark:text-white text-gray-900">{totalComments}</span>
+                <span className="text-[10px] sm:text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Комменты</span>
               </div>
             </div>
             
-            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[4rem] p-10 shadow-2xl">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="p-4 bg-indigo-600 rounded-3xl text-white shadow-lg shadow-indigo-500/40"><Zap size={24} fill="currentColor" /></div>
-                <h2 className="text-3xl font-black uppercase tracking-tighter dark:text-white text-gray-900">Стена публикаций</h2>
+            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[3rem] sm:rounded-[4rem] p-6 sm:p-10 shadow-2xl">
+              <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-10">
+                <div className="p-3 sm:p-4 bg-indigo-600 rounded-2xl sm:rounded-3xl text-white shadow-lg shadow-indigo-500/40">
+                  <Zap size={24} fill="currentColor" />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter dark:text-white text-gray-900">Стена публикаций</h2>
               </div>
               
               {isOwnProfile && (
-                <div className="mb-10 p-6 bg-gray-50 dark:bg-slate-800/40 rounded-[2.5rem] border-2 border-gray-200 dark:border-slate-700/50 shadow-inner">
+                <div className="mb-6 sm:mb-10 p-4 sm:p-6 bg-gray-50 dark:bg-slate-800/40 rounded-[2rem] sm:rounded-[2.5rem] border-2 border-gray-200 dark:border-slate-700/50 shadow-inner">
                   <textarea 
                     value={postText} 
                     onChange={(e) => setPostText(e.target.value)} 
                     placeholder="ЧТО У ВАС НОВОГО?" 
-                    className="w-full bg-transparent border-none outline-none dark:text-white text-gray-900 font-bold text-lg resize-none mb-4 h-24 placeholder:text-gray-400 dark:placeholder:text-slate-600 placeholder:font-black placeholder:uppercase placeholder:tracking-wider" 
+                    className="w-full bg-transparent border-none outline-none dark:text-white text-gray-900 font-bold text-base sm:text-lg resize-none mb-4 h-20 sm:h-24 placeholder:text-gray-400 dark:placeholder:text-slate-600 placeholder:font-black placeholder:uppercase placeholder:tracking-wider placeholder:text-sm sm:placeholder:text-base" 
                     maxLength={1000} 
                   />
                   <AnimatePresence>
                     {imagePreview && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="relative w-full mb-6 rounded-3xl overflow-hidden border-2 border-gray-300 dark:border-slate-700 shadow-md">
-                        <img src={imagePreview} className="w-full h-64 object-cover" alt="Предпросмотр медиа" />
-                        <button onClick={clearImageSelection} className="absolute top-4 right-4 p-2 bg-black/60 rounded-xl text-white hover:bg-red-500 transition-colors backdrop-blur-md cursor-pointer" title="Удалить фото">
-                          <X size={18}/>
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="relative w-full mb-4 sm:mb-6 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-gray-300 dark:border-slate-700 shadow-md">
+                        <img src={imagePreview} className="w-full h-48 sm:h-64 object-cover" alt="Предпросмотр медиа" />
+                        <button onClick={clearImageSelection} className="absolute top-3 sm:top-4 right-3 sm:right-4 p-2 bg-black/60 rounded-xl text-white hover:bg-red-500 transition-colors backdrop-blur-md cursor-pointer" title="Удалить фото">
+                          <X size={18} />
                         </button>
                       </motion.div>
                     )}
                   </AnimatePresence>
 
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <span className="text-gray-500 dark:text-slate-500 text-sm font-medium">{postText.length}/1000</span>
-                      <button onClick={() => fileInputRef.current?.click()} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 flex items-center gap-2 font-bold transition-colors cursor-pointer uppercase text-sm">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+                    <div className="flex items-center justify-between sm:justify-start sm:gap-4">
+                      <span className="text-gray-500 dark:text-slate-500 text-xs sm:text-sm font-medium">{postText.length}/1000</span>
+                      <button onClick={() => fileInputRef.current?.click()} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 flex items-center gap-1.5 sm:gap-2 font-bold transition-colors cursor-pointer uppercase text-xs sm:text-sm">
                         <ImageIcon size={18} /> Изображение
                       </button>
                       <input type="file" hidden ref={fileInputRef} onChange={handleImageSelect} accept="image/*" />
                     </div>
-                    <button onClick={createPost} disabled={isPosting || (!postText.trim() && !postImage)} className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs flex items-center gap-3 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                    <button onClick={createPost} disabled={isPosting || (!postText.trim() && !postImage)} className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs sm:text-sm flex items-center justify-center gap-2 sm:gap-3 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                       {isPosting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />} {isPosting ? "Обработка..." : "Опубликовать"}
                     </button>
                   </div>
                 </div>
               )}
               
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 {allPosts.map(post => (
                   <PostComponent key={post.id} post={post} />
                 ))}
                 
                 {allPosts.length === 0 && (
-                  <div className="p-20 border-4 border-dashed border-gray-300 dark:border-slate-800 rounded-[3rem] shadow-inner bg-gray-50 dark:bg-transparent">
-                    <p className="font-black uppercase text-center text-gray-400 dark:text-slate-600 tracking-[0.3em] text-base">{isOwnProfile ? "У вас пока нет публикаций" : "Пользователь еще ничего не публиковал"}</p>
+                  <div className="p-12 sm:p-20 border-4 border-dashed border-gray-300 dark:border-slate-800 rounded-[2rem] sm:rounded-[3rem] shadow-inner bg-gray-50 dark:bg-transparent">
+                    <p className="font-black uppercase text-center text-gray-400 dark:text-slate-600 tracking-[0.2em] sm:tracking-[0.3em] text-sm sm:text-base">
+                      {isOwnProfile ? "У вас пока нет публикаций" : "Пользователь еще ничего не публиковал"}
+                    </p>
                   </div>
                 )}
               </div>
