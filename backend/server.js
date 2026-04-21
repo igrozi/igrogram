@@ -13,6 +13,8 @@ import messagesRoutes from './routes/messages.js';
 import postsRoutes from './routes/posts.js';
 import uploadRoutes from './routes/upload.js';
 
+import ratingStatsRouter from './routes/ratingStats.js';
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,6 +46,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/ratings', ratingStatsRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

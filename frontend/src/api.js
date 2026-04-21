@@ -222,5 +222,33 @@ export const api = {
       body: formData
     });
     return handleResponse(res);
+  },
+
+  getRatingStats: async (userId, token) => {
+    const response = await fetch(`${API_URL}/api/ratings/stats/${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch rating stats');
+    }
+    
+    return response.json();
+  },
+
+  getVoters: async (userId, token) => {
+    const response = await fetch(`${API_URL}/api/ratings/voters/${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch voters');
+    }
+    
+    return response.json();
   }
 };

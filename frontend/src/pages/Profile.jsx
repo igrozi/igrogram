@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, MessageCircle, Star, Zap, Heart, MessageSquare, Send, 
   Pencil, Check, X, Calendar, Trash2, Image as ImageIcon, Loader2, 
-  Reply, Pin, PinOff, User, Settings, LogOut 
+  Reply, Pin, PinOff, Users, BarChart3
 } from 'lucide-react';
 
 const checkIsOnline = (profile) => {
@@ -38,23 +38,158 @@ const formatDateWithTime = (dateString) => {
   });
 };
 
-const AnimatedTitle = ({ text }) => (
-  <div className="flex justify-center">
-    {Array.from(text).map((char, i) => (
-      <motion.span
-        key={i}
-        animate={{ 
-          opacity: [0.4, 1, 0.4], 
-          textShadow: ["0px 0px 0px rgba(79,70,229,0)", "0px 0px 10px rgba(79,70,229,0.8)", "0px 0px 0px rgba(79,70,229,0)"] 
-        }}
-        transition={{ duration: 2, repeat: Infinity, delay: i * 0.1 }}
-        className="inline-block"
-      >
-        {char === " " ? "\u00A0" : char}
-      </motion.span>
-    ))}
-  </div>
-);
+// Компактная диаграмма оценок в стиле мессенджера
+const CompactRatingChart = ({ stats, total, average, darkMode }) => {
+  const [hoveredBar, setHoveredBar] = useState(null);
+  const [animated, setAnimated] = useState(false);
+  
+  useEffect(() => {
+    setAnimated(true);
+  }, []);
+
+  const ratings = [
+    { stars: 5, count: stats[5] || 0, color: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-500' },
+    { stars: 4, count: stats[4] || 0, color: 'from-indigo-400 to-indigo-500', bg: 'bg-indigo-400' },
+    { stars: 3, count: stats[3] || 0, color: 'from-violet-400 to-violet-500', bg: 'bg-violet-400' },
+    { stars: 2, count: stats[2] || 0, color: 'from-purple-400 to-purple-500', bg: 'bg-purple-400' },
+    { stars: 1, count: stats[1] || 0, color: 'from-fuchsia-400 to-fuchsia-500', bg: 'bg-fuchsia-400' }
+  ];
+
+  const getPercentage = (count) => {
+    if (total === 0) return 0;
+    return (count / total) * 100;
+  };
+
+  if (total === 0) {
+    return (
+      <div className="mt-6 p-6 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-[2.5rem] shadow-xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-indigo-600 rounded-xl">
+            <BarChart3 size={16} className="text-white" />
+          </div>
+          <h3 className="font-black text-sm uppercase tracking-wider text-gray-600 dark:text-slate-400">
+            Статистика оценок
+          </h3>
+        </div>
+        <p className="text-center text-xs font-black uppercase text-gray-400 dark:text-slate-500 py-4">
+          Пока нет оценок
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="mt-6 p-6 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 rounded-[2.5rem] shadow-xl"
+    >
+      {/* Заголовок */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/20">
+            <BarChart3 size={16} className="text-white" />
+          </div>
+          <h3 className="font-black text-sm uppercase tracking-wider text-gray-600 dark:text-slate-400">
+            Статистика оценок
+          </h3>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <Users size={12} className="text-indigo-400 dark:text-indigo-500" />
+            <span className="text-xs font-bold text-gray-500 dark:text-slate-400">
+              {total}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/30 rounded-full border border-indigo-200 dark:border-indigo-800/50">
+            <Star size={12} className="text-indigo-500 fill-indigo-500" />
+            <span className="text-base font-black text-gray-900 dark:text-white">
+              {average.toFixed(1)}
+            </span>
+            <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500">/5</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Диаграмма */}
+      <div className="space-y-2">
+        {ratings.map((rating, index) => (
+          <motion.div
+            key={rating.stars}
+            initial={{ opacity: 0, x: -10 }}
+            animate={animated ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.2, delay: index * 0.05 }}
+            className="group"
+            onMouseEnter={() => setHoveredBar(rating.stars)}
+            onMouseLeave={() => setHoveredBar(null)}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 w-12">
+                <span className="text-xs font-black text-gray-500 dark:text-slate-400">
+                  {rating.stars}
+                </span>
+                <Star size={12} className="text-indigo-400 fill-indigo-400" />
+              </div>
+
+              <div className="flex-1">
+                <div className="relative h-7 rounded-xl overflow-hidden bg-gray-100 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={animated ? { width: `${getPercentage(rating.count)}%` } : { width: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.05, ease: "easeOut" }}
+                    className={`absolute inset-y-0 left-0 bg-gradient-to-r ${rating.color} shadow-md`}
+                  />
+                  
+                  <div className="absolute inset-0 flex items-center justify-between px-3">
+                    <span className="text-xs font-bold text-gray-700 dark:text-slate-300 z-10">
+                      {rating.count}
+                    </span>
+                    <AnimatePresence>
+                      {hoveredBar === rating.stars && (
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          className="text-[10px] font-black text-gray-500 dark:text-slate-400 z-10 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-full"
+                        >
+                          {getPercentage(rating.count).toFixed(0)}%
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Мини-статистика */}
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-800">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="text-center p-2 bg-indigo-50 dark:bg-indigo-950/20 rounded-xl">
+            <div className="text-lg font-black text-indigo-600 dark:text-indigo-400">
+              {ratings.reduce((max, r) => r.count > max ? r.count : max, 0)}
+            </div>
+            <div className="text-[9px] font-black uppercase text-gray-400 dark:text-slate-500 tracking-wider">
+              Макс. голосов
+            </div>
+          </div>
+          <div className="text-center p-2 bg-indigo-50 dark:bg-indigo-950/20 rounded-xl">
+            <div className="text-lg font-black text-indigo-600 dark:text-indigo-400">
+              {((stats[5] || 0) + (stats[4] || 0))}
+            </div>
+            <div className="text-[9px] font-black uppercase text-gray-400 dark:text-slate-500 tracking-wider">
+              4-5 звёзд
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 const Profile = () => {
   const { username } = useParams();
@@ -86,8 +221,14 @@ const Profile = () => {
   }, [user, profile]);
 
   const fetchRatingStats = useCallback(async (userId) => {
-    return { stats: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}, total: 0, average: 0 };
-  }, []);
+    try {
+      const response = await api.getRatingStats(userId, token);
+      return response;
+    } catch (error) {
+      console.error('Error fetching rating stats:', error);
+      return { stats: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}, total: 0, average: 0 };
+    }
+  }, [token]);
 
   const fetchProfileData = useCallback(async () => {
     try {
@@ -122,7 +263,17 @@ const Profile = () => {
       }
 
       const posts = await api.getUserPosts(profileData.user_id, token);
-      setAllPosts(posts);
+      
+      const sortedPosts = posts.sort((a, b) => {
+        if (a.is_pinned && !b.is_pinned) return -1;
+        if (!a.is_pinned && b.is_pinned) return 1;
+        if (a.is_pinned && b.is_pinned) {
+          return new Date(b.pinned_at) - new Date(a.pinned_at);
+        }
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+      
+      setAllPosts(sortedPosts);
     } catch (err) {
       console.error(err);
       setError("Не удалось загрузить данные профиля.");
@@ -232,7 +383,17 @@ const Profile = () => {
         imageUrl: uploadedImageUrl
       }, token);
       
-      setAllPosts(prev => [newPost, ...prev]);
+      setAllPosts(prev => {
+        const updatedPosts = [newPost, ...prev];
+        return updatedPosts.sort((a, b) => {
+          if (a.is_pinned && !b.is_pinned) return -1;
+          if (!a.is_pinned && b.is_pinned) return 1;
+          if (a.is_pinned && b.is_pinned) {
+            return new Date(b.pinned_at) - new Date(a.pinned_at);
+          }
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+      });
       setPostText("");
       clearImageSelection();
     } catch (error) {
@@ -248,11 +409,27 @@ const Profile = () => {
     
     try {
       const updated = await api.updatePost(postId, { isPinned: !isCurrentlyPinned }, token);
-      setAllPosts(prev => prev.map(post => 
-        post.id === postId 
-          ? { ...post, is_pinned: updated.is_pinned, pinned_at: updated.pinned_at }
-          : post
-      ));
+      
+      setAllPosts(prev => {
+        const updatedPosts = prev.map(post => 
+          post.id === postId 
+            ? { 
+                ...post, 
+                is_pinned: updated.is_pinned, 
+                pinned_at: updated.pinned_at 
+              }
+            : post
+        );
+        
+        return updatedPosts.sort((a, b) => {
+          if (a.is_pinned && !b.is_pinned) return -1;
+          if (!a.is_pinned && b.is_pinned) return 1;
+          if (a.is_pinned && b.is_pinned) {
+            return new Date(b.pinned_at) - new Date(a.pinned_at);
+          }
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+      });
     } catch (error) {
       console.error("Ошибка при закреплении/откреплении поста:", error);
       alert("Не удалось изменить статус поста.");
@@ -394,11 +571,11 @@ const Profile = () => {
           <div className="flex-1">
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-black text-lg dark:text-white text-gray-900">{post.author_name}</h4>
+                <h4 className="font-black text-xl dark:text-white text-gray-900">{post.author_name}</h4>
                 <p className="text-indigo-600 dark:text-indigo-400 text-sm font-bold">@{post.author_username}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 dark:text-slate-500 text-xs font-bold">
+                <span className="text-gray-500 dark:text-slate-500 text-xs font-medium">
                   {formatDateWithTime(post.created_at)}
                 </span>
                 {user && post.author_id === user.user_id && (
@@ -416,7 +593,7 @@ const Profile = () => {
           </div>
         </div>
         
-        {post.content && <p className="dark:text-white text-gray-800 text-lg mb-6 whitespace-pre-wrap font-medium">{post.content}</p>}
+        {post.content && <p className="dark:text-white text-gray-800 text-lg mb-6 whitespace-pre-wrap font-bold">{post.content}</p>}
         {post.image_url && (
           <div className="mb-6 rounded-[2rem] overflow-hidden border-2 border-gray-200 dark:border-slate-700/50 shadow-md">
             <img 
@@ -487,7 +664,7 @@ const Profile = () => {
                   <div className="flex-1 flex gap-2">
                     <input 
                       type="text" 
-                      placeholder={localReplyingTo ? `Ответ ${localReplyingTo.author_name}...` : "Написать комментарий..."} 
+                      placeholder={localReplyingTo ? `ОТВЕТ ${localReplyingTo.author_name.toUpperCase()}...` : "НАПИСАТЬ КОММЕНТАРИЙ..."} 
                       value={localCommentText} 
                       onChange={(e) => setLocalCommentText(e.target.value)} 
                       onKeyPress={(e) => { 
@@ -495,12 +672,12 @@ const Profile = () => {
                           handleAddCommentLocal();
                         } 
                       }} 
-                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-2 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner" 
+                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-2 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-xs" 
                     />
                     <button 
                       onClick={handleAddCommentLocal}
                       disabled={isAddingComment}
-                      className="px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50"
+                      className="px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-sm"
                     >
                       {isAddingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                     </button>
@@ -533,7 +710,7 @@ const Profile = () => {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-gray-500 dark:text-slate-500 font-bold">
+                            <span className="text-[10px] text-gray-500 dark:text-slate-500 font-medium">
                               {formatDateWithTime(comment.created_at)}
                             </span>
                             {user && (comment.author_id === user.user_id || isOwnProfile) && (
@@ -575,7 +752,7 @@ const Profile = () => {
           <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
           <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4 relative" />
         </div>
-        <span className="text-indigo-500 font-black tracking-widest animate-pulse uppercase">Загрузка...</span>
+        <span className="text-indigo-500 font-black tracking-widest animate-pulse uppercase text-lg">Загрузка...</span>
       </div>
     );
   }
@@ -584,7 +761,7 @@ const Profile = () => {
     return (
       <div className={`h-screen flex flex-col items-center justify-center transition-colors duration-500 ${darkMode ? 'dark bg-[#020617]' : 'bg-gray-100'}`}>
         <div className="text-red-500 text-xl font-bold mb-4">{error}</div>
-        <button onClick={() => navigate('/')} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors cursor-pointer">Вернуться на главную</button>
+        <button onClick={() => navigate('/')} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors cursor-pointer uppercase">Вернуться на главную</button>
       </div>
     );
   }
@@ -627,7 +804,7 @@ const Profile = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4">
-            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[3.5rem] p-10 text-center shadow-2xl sticky top-10">
+            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-4 border-gray-200 dark:border-slate-800 rounded-[3.5rem] p-10 text-center shadow-2xl">
               <div className="relative w-44 h-44 mx-auto mb-5">
                 <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 rounded-full" />
                 <img 
@@ -649,7 +826,7 @@ const Profile = () => {
 
               <div className="flex items-center justify-center gap-2 mb-2">
                 <div className={`w-2 h-2 rounded-full ${checkIsOnline(profile) ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-slate-600'}`} />
-                <span className={`text-[12px] font-black tracking-wider uppercase ${checkIsOnline(profile) ? 'text-green-600 dark:text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                <span className={`text-xs font-black tracking-wider uppercase ${checkIsOnline(profile) ? 'text-green-600 dark:text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
                   {checkIsOnline(profile) ? 'Онлайн' : formatLastSeen(profile?.last_seen)}
                 </span>
               </div>
@@ -663,12 +840,12 @@ const Profile = () => {
               )}
 
               {!isOwnProfile && user && (
-                <button onClick={goToChat} className="w-full py-5 text-white bg-indigo-600 rounded-[2rem] font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 group hover:scale-[1.02] active:scale-[0.98] mb-8 cursor-pointer">
+                <button onClick={goToChat} className="w-full py-5 text-white bg-indigo-600 rounded-[2rem] font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 group hover:scale-[1.02] active:scale-[0.98] mb-8 cursor-pointer text-base">
                   <MessageCircle size={22} fill="currentColor" /> Написать сообщение
                 </button>
               )}
 
-              <div className="mt-8 p-6 bg-gray-100/80 dark:bg-slate-950/50 rounded-3xl border-2 border-gray-200 dark:border-slate-800 shadow-inner">
+              <div className="p-6 bg-gray-100/80 dark:bg-slate-950/50 rounded-3xl border-2 border-gray-200 dark:border-slate-800 shadow-inner">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-sm font-black uppercase text-gray-500 dark:text-slate-400">О себе</h3>
                   {isOwnProfile && !editingBio && (
@@ -686,15 +863,15 @@ const Profile = () => {
                       ref={bioInputRef}
                       value={newBio} 
                       onChange={(e) => setNewBio(e.target.value)} 
-                      placeholder="Расскажите о себе..." 
-                      className="w-full uppercase bg-white dark:bg-slate-800/50 border-2 border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-500 dark:text-white resize-none h-32 outline-none focus:border-indigo-500 text-xs" 
+                      placeholder="РАССКАЖИТЕ О СЕБЕ..." 
+                      className="w-full bg-white dark:bg-slate-800/50 border-2 border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-500 dark:text-white resize-none h-32 outline-none focus:border-indigo-500 text-sm font-bold uppercase placeholder:font-black placeholder:text-gray-400 placeholder:tracking-wider" 
                       maxLength={250} 
                     />
                     <div className="flex gap-2">
-                      <button onClick={handleUpdateBio} disabled={isUpdatingBio} className="flex-1 text-white bg-indigo-600 hover:bg-indigo-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50">
+                      <button onClick={handleUpdateBio} disabled={isUpdatingBio} className="flex-1 text-white bg-indigo-600 hover:bg-indigo-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50 uppercase text-sm">
                         {isUpdatingBio ? <Loader2 size={20} className="animate-spin" /> : <Check size={24} />}
                       </button>
-                      <button onClick={() => { setEditingBio(false); setNewBio(profile?.bio || ""); }} className="flex-1 text-white bg-gray-800 hover:bg-gray-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                      <button onClick={() => { setEditingBio(false); setNewBio(profile?.bio || ""); }} className="flex-1 text-white bg-gray-800 hover:bg-gray-700 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer uppercase text-sm">
                         <X size={24} />
                       </button>
                     </div>
@@ -702,8 +879,8 @@ const Profile = () => {
                 ) : (
                   <p className="text-sm font-bold text-gray-700 dark:text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
                     {profile?.bio ? profile.bio : (isOwnProfile ? 
-                      <span className="text-gray-400 dark:text-slate-500">Нажмите на карандаш, чтобы добавить информацию о себе</span> : 
-                      <span className="text-gray-400 dark:text-slate-500">Пользователь еще не добавил информацию о себе</span>
+                      <span className="text-gray-400 dark:text-slate-500 font-black uppercase text-xs tracking-wider">НАЖМИТЕ НА КАРАНДАШ, ЧТОБЫ ДОБАВИТЬ ИНФОРМАЦИЮ О СЕБЕ</span> : 
+                      <span className="text-gray-400 dark:text-slate-500 font-black uppercase text-xs tracking-wider">ПОЛЬЗОВАТЕЛЬ ЕЩЕ НЕ ДОБАВИЛ ИНФОРМАЦИЮ О СЕБЕ</span>
                     )}
                   </p>
                 )}
@@ -712,10 +889,20 @@ const Profile = () => {
               <div className="mt-6 space-y-3">
                 <div className="flex items-center gap-3 text-gray-500 dark:text-slate-400 justify-center">
                   <Calendar size={16} />
-                  <span className="text-sm font-bold">Зарегистрирован: {new Date(profile?.created_at).toLocaleDateString('ru-RU')}</span>
+                  <span className="text-sm font-medium">Зарегистрирован: {new Date(profile?.created_at).toLocaleDateString('ru-RU')}</span>
                 </div>
               </div>
             </div>
+
+            {/* ДИАГРАММА - ОТДЕЛЬНАЯ ПАНЕЛЬ ПОД КАРТОЧКОЙ ПРОФИЛЯ */}
+            {isOwnProfile && (
+              <CompactRatingChart 
+                stats={ratingStats}
+                total={ratingStats.total}
+                average={ratingStats.average}
+                darkMode={darkMode}
+              />
+            )}
           </div>
           
           <div className="lg:col-span-8 space-y-8">
@@ -723,23 +910,23 @@ const Profile = () => {
               <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
                 <Star size={24} className="text-yellow-500 mb-2" />
                 <span className="text-2xl font-black dark:text-white text-gray-900">{profile?.rating ? Number(profile.rating).toFixed(1) : '0.0'}</span>
-                <span className="text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Рейтинг</span>
-                <span className="text-[9px] text-gray-400 dark:text-slate-600">({profile?.rating_count || 0})</span>
+                <span className="text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Рейтинг</span>
+                <span className="text-[10px] font-medium text-gray-400 dark:text-slate-600">({profile?.rating_count || 0})</span>
               </div>
               <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
                 <MessageCircle size={24} className="text-blue-500 mb-2" />
                 <span className="text-2xl font-black dark:text-white text-gray-900">{allPosts.length}</span>
-                <span className="text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Посты</span>
+                <span className="text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Посты</span>
               </div>
               <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
                 <Heart size={24} className="text-red-500 mb-2" />
                 <span className="text-2xl font-black dark:text-white text-gray-900">{totalLikes}</span>
-                <span className="text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Лайки</span>
+                <span className="text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Лайки</span>
               </div>
               <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-2 border-gray-200 dark:border-slate-800 p-4 rounded-[2rem] flex flex-col items-center shadow-xl hover:border-indigo-500/30 transition-colors">
                 <MessageSquare size={24} className="text-purple-500 mb-2" />
                 <span className="text-2xl font-black dark:text-white text-gray-900">{totalComments}</span>
-                <span className="text-[10px] font-black uppercase text-gray-500 dark:text-slate-500 text-center">Комменты</span>
+                <span className="text-xs font-black uppercase text-gray-500 dark:text-slate-500 text-center">Комменты</span>
               </div>
             </div>
             
@@ -754,8 +941,8 @@ const Profile = () => {
                   <textarea 
                     value={postText} 
                     onChange={(e) => setPostText(e.target.value)} 
-                    placeholder="Что у вас нового?" 
-                    className="w-full bg-transparent border-none outline-none dark:text-white text-gray-900 font-bold text-lg resize-none mb-4 h-24 placeholder:text-gray-400 dark:placeholder:text-slate-600" 
+                    placeholder="ЧТО У ВАС НОВОГО?" 
+                    className="w-full bg-transparent border-none outline-none dark:text-white text-gray-900 font-bold text-lg resize-none mb-4 h-24 placeholder:text-gray-400 dark:placeholder:text-slate-600 placeholder:font-black placeholder:uppercase placeholder:tracking-wider" 
                     maxLength={1000} 
                   />
                   <AnimatePresence>
@@ -771,14 +958,14 @@ const Profile = () => {
 
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                      <span className="text-gray-500 dark:text-slate-500 text-sm font-bold uppercase">{postText.length}/1000</span>
-                      <button onClick={() => fileInputRef.current?.click()} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 flex items-center gap-2 font-bold transition-colors cursor-pointer">
-                        <ImageIcon size={18} /> ИЗОБРАЖЕНИЕ
+                      <span className="text-gray-500 dark:text-slate-500 text-sm font-medium">{postText.length}/1000</span>
+                      <button onClick={() => fileInputRef.current?.click()} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 flex items-center gap-2 font-bold transition-colors cursor-pointer uppercase text-sm">
+                        <ImageIcon size={18} /> Изображение
                       </button>
                       <input type="file" hidden ref={fileInputRef} onChange={handleImageSelect} accept="image/*" />
                     </div>
                     <button onClick={createPost} disabled={isPosting || (!postText.trim() && !postImage)} className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs flex items-center gap-3 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                      {isPosting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />} {isPosting ? "ОБРАБОТКА..." : "Опубликовать"}
+                      {isPosting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />} {isPosting ? "Обработка..." : "Опубликовать"}
                     </button>
                   </div>
                 </div>
@@ -791,7 +978,7 @@ const Profile = () => {
                 
                 {allPosts.length === 0 && (
                   <div className="p-20 border-4 border-dashed border-gray-300 dark:border-slate-800 rounded-[3rem] shadow-inner bg-gray-50 dark:bg-transparent">
-                    <p className="font-black uppercase text-center text-gray-400 dark:text-slate-600 tracking-[0.3em]">{isOwnProfile ? "У вас пока нет публикаций" : "Пользователь еще ничего не публиковал"}</p>
+                    <p className="font-black uppercase text-center text-gray-400 dark:text-slate-600 tracking-[0.3em] text-base">{isOwnProfile ? "У вас пока нет публикаций" : "Пользователь еще ничего не публиковал"}</p>
                   </div>
                 )}
               </div>

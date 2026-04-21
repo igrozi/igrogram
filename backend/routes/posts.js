@@ -15,7 +15,7 @@ router.get('/user/:userId', authenticate, async (req, res) => {
        FROM posts p
        LEFT JOIN profiles pr ON p.author_id = pr.user_id
        WHERE p.author_id = $1 
-       ORDER BY p.is_pinned DESC, p.pinned_at DESC, p.created_at DESC
+       ORDER BY p.is_pinned DESC, p.pinned_at DESC NULLS LAST, p.created_at DESC
        LIMIT 50`,
       [userId]
     );
@@ -95,18 +95,60 @@ router.put('/:postId', authenticate, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized' });
     }
     
-    const pinnedAt = isPinned ? new Date().toISOString() : null;
+    // Если isPinned передан в запросе
+    let updateFields = [];
+    let values = [];
+    let paramIndex = 1;
+    
+    if (content !== undefined) {
+      updateFields.push(`content = $${paramIndex}`);
+      values.push(content);
+      paramIndex++;
+    }
+    
+    if (isPinned !== undefined) {
+      updateFields.push(`is_pinned = $${paramIndex}`);
+      values.push(isPinned);
+      paramIndex++;
+      
+      // Устанавливаем pinned_at только при закреплении
+      if (isPinned) {
+        updateFields.push(`pinned_at = $${paramIndex}`);
+        values.push(new Date().toISOString());
+        paramIndex++;
+      } else {
+        updateFields.push(`pinned_at = $${paramIndex}`);
+        values.push(null);
+        paramIndex++;
+      }
+    }
+    
+    if (updateFields.length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
+    
+    values.push(postId);
+    
     const result = await pool.query(
       `UPDATE posts 
-       SET content = COALESCE($1, content),
-           is_pinned = COALESCE($2, is_pinned),
-           pinned_at = $3
-       WHERE id = $4
+       SET ${updateFields.join(', ')}
+       WHERE id = $${paramIndex}
        RETURNING *`,
-      [content, isPinned, pinnedAt, postId]
+      values
     );
     
-    res.json(result.rows[0]);
+    // Получаем актуальный аватар для ответа
+    const profile = await pool.query(
+      'SELECT avatar_url FROM profiles WHERE user_id = $1',
+      [result.rows[0].author_id]
+    );
+    
+    const response = {
+      ...result.rows[0],
+      author_avatar: profile.rows[0]?.avatar_url || result.rows[0].author_avatar
+    };
+    
+    res.json(response);
   } catch (error) {
     console.error('Error in updatePost:', error);
     res.status(500).json({ error: error.message });
