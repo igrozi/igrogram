@@ -20,6 +20,33 @@ const Auth = () => {
   const navigate = useNavigate();
   const { login, register, user } = useAuth();
 
+  // ===== ФИКС АВТОЗАПОЛНЕНИЯ =====
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.id = 'auth-autofill-fix';
+    style.textContent = `
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover,
+      input:-webkit-autofill:focus,
+      input:-webkit-autofill:active,
+      input:-webkit-autofill:focus-visible {
+        -webkit-box-shadow: 0 0 0 1000px #020617 inset !important;
+        -webkit-text-fill-color: #ffffff !important;
+        caret-color: #ffffff !important;
+        transition: background-color 999999s ease-in-out 0s !important;
+      }
+    `;
+    
+    const oldStyle = document.getElementById('auth-autofill-fix');
+    if (oldStyle) oldStyle.remove();
+    document.head.appendChild(style);
+    
+    return () => {
+      const styleToRemove = document.getElementById('auth-autofill-fix');
+      if (styleToRemove) styleToRemove.remove();
+    };
+  }, []);
+
   useEffect(() => {
     if (user) {
       navigate("/");
