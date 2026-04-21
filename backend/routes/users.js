@@ -1,8 +1,11 @@
 import express from 'express';
 import { pool } from '../db/pool.js';
 import { authenticate } from '../middleware/auth.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
+
+// ===== КОНКРЕТНЫЕ РОУТЫ (должны быть ПЕРЕД параметризованными) =====
 
 // Получить всех пользователей
 router.get('/', authenticate, async (req, res) => {
@@ -14,6 +17,116 @@ router.get('/', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Error in getUsers:', error);
     res.status(500).json([]);
+  }
+});
+
+// Поиск пользователей
+router.get('/search', authenticate, async (req, res) => {
+  const { q } = req.query;
+  const userId = req.userId;
+  
+  try {
+    const result = await pool.query(
+      `SELECT id, user_id, username, name, avatar_url, is_online, last_seen
+       FROM profiles 
+       WHERE (name ILIKE $1 OR username ILIKE $1)
+       AND user_id != $2
+       LIMIT 20`,
+      [`%${q}%`, userId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error in searchUsers:', error);
+    res.status(500).json([]);
+  }
+});
+
+// Проверка пароля (ДОЛЖЕН БЫТЬ ПЕРЕД /:userId)
+router.post('/verify-password', authenticate, async (req, res) => {
+  console.log('Verify password request:', req.body);
+  
+  const { userId, password } = req.body;
+  const currentUserId = req.userId;
+  
+  if (userId !== currentUserId) {
+    return res.status(403).json({ valid: false, message: 'Unauthorized' });
+  }
+  
+  try {
+    const result = await pool.query(
+      'SELECT password_hash FROM profiles WHERE user_id = $1',
+      [userId]
+    );
+    
+    console.log('User found:', result.rows.length > 0);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ valid: false, message: 'User not found' });
+    }
+    
+    const user = result.rows[0];
+    
+    if (!user.password_hash) {
+      console.error('No password_hash found for user');
+      return res.status(500).json({ valid: false, message: 'Invalid user data' });
+    }
+    
+    const isValid = await bcrypt.compare(password, user.password_hash);
+    
+    console.log('Password valid:', isValid);
+    
+    res.json({ valid: isValid });
+  } catch (error) {
+    console.error('Error verifying password:', error);
+    res.status(500).json({ valid: false, error: error.message });
+  }
+});
+
+// Оценить пользователя
+router.post('/rate', authenticate, async (req, res) => {
+  const { raterId, ratedUserId, score } = req.body;
+  
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+    
+    const existing = await client.query(
+      'SELECT * FROM ratings WHERE rater_id = $1 AND rated_user_id = $2',
+      [raterId, ratedUserId]
+    );
+    
+    if (existing.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ message: 'Already rated' });
+    }
+    
+    await client.query(
+      'INSERT INTO ratings (rater_id, rated_user_id, score) VALUES ($1, $2, $3)',
+      [raterId, ratedUserId, score]
+    );
+    
+    await client.query(
+      `UPDATE profiles 
+       SET rating = (
+         SELECT COALESCE(AVG(score), 0)::DECIMAL(3,1)
+         FROM ratings 
+         WHERE rated_user_id = $1
+       ),
+       rating_count = rating_count + 1,
+       voted_users = array_append(voted_users, $2)
+       WHERE user_id = $1`,
+      [ratedUserId, raterId]
+    );
+    
+    await client.query('COMMIT');
+    res.json({ message: 'Rated successfully' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error in rateUser:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -62,75 +175,50 @@ router.put('/profile', authenticate, async (req, res) => {
   }
 });
 
-// Оценить пользователя
-router.post('/rate', authenticate, async (req, res) => {
-  const { raterId, ratedUserId, score } = req.body;
+// ===== ПАРАМЕТРИЗОВАННЫЕ РОУТЫ (должны быть ПОСЛЕ конкретных) =====
+
+// Удаление аккаунта
+router.delete('/:userId', authenticate, async (req, res) => {
+  const { userId } = req.params;
+  const currentUserId = req.userId;
+  
+  console.log('Delete account request for:', userId);
+  
+  if (userId !== currentUserId) {
+    return res.status(403).json({ message: 'Unauthorized' });
+  }
   
   const client = await pool.connect();
   
   try {
     await client.query('BEGIN');
     
-    // Проверка существующей оценки
-    const existing = await client.query(
-      'SELECT * FROM ratings WHERE rater_id = $1 AND rated_user_id = $2',
-      [raterId, ratedUserId]
-    );
+    console.log('Deleting messages...');
+    await client.query('DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1', [userId]);
     
-    if (existing.rows.length > 0) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ message: 'Already rated' });
-    }
+    console.log('Deleting comments...');
+    await client.query('DELETE FROM comments WHERE author_id = $1', [userId]);
     
-    // Добавление оценки
-    await client.query(
-      'INSERT INTO ratings (rater_id, rated_user_id, score) VALUES ($1, $2, $3)',
-      [raterId, ratedUserId, score]
-    );
+    console.log('Deleting posts...');
+    await client.query('DELETE FROM posts WHERE author_id = $1', [userId]);
     
-    // Обновление рейтинга пользователя
-    await client.query(
-      `UPDATE profiles 
-       SET rating = (
-         SELECT COALESCE(AVG(score), 0)::DECIMAL(3,1)
-         FROM ratings 
-         WHERE rated_user_id = $1
-       ),
-       rating_count = rating_count + 1,
-       voted_users = array_append(voted_users, $2)
-       WHERE user_id = $1`,
-      [ratedUserId, raterId]
-    );
+    console.log('Deleting ratings...');
+    await client.query('DELETE FROM ratings WHERE rater_id = $1 OR rated_user_id = $1', [userId]);
+    
+    console.log('Deleting profile...');
+    await client.query('DELETE FROM profiles WHERE user_id = $1', [userId]);
     
     await client.query('COMMIT');
-    res.json({ message: 'Rated successfully' });
+    
+    console.log('Account deleted successfully');
+    
+    res.json({ success: true, message: 'Account deleted successfully' });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error in rateUser:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error deleting account:', error);
+    res.status(500).json({ success: false, error: error.message });
   } finally {
     client.release();
-  }
-});
-
-// Поиск пользователей
-router.get('/search', authenticate, async (req, res) => {
-  const { q } = req.query;
-  const userId = req.userId;
-  
-  try {
-    const result = await pool.query(
-      `SELECT id, user_id, username, name, avatar_url, is_online, last_seen
-       FROM profiles 
-       WHERE (name ILIKE $1 OR username ILIKE $1)
-       AND user_id != $2
-       LIMIT 20`,
-      [`%${q}%`, userId]
-    );
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error in searchUsers:', error);
-    res.status(500).json([]);
   }
 });
 
