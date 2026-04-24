@@ -874,7 +874,7 @@ const Profile = () => {
                       value={newBio} 
                       onChange={(e) => setNewBio(e.target.value)} 
                       placeholder="РАССКАЖИТЕ О СЕБЕ..." 
-                      className="w-full bg-white dark:bg-slate-800/50 border-2 border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-500 dark:text-white resize-none h-32 outline-none focus:border-indigo-500 text-xs sm:text-sm font-bold uppercase placeholder:font-black placeholder:text-gray-400 placeholder:tracking-wider" 
+                      className="w-full bg-white dark:bg-slate-800/50 border-2 border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-500 dark:text-white resize-none h-32 outline-none focus:border-indigo-500 text-xs sm:text-sm font-bold placeholder:font-black placeholder:text-gray-400 placeholder:tracking-wider" 
                       maxLength={250} 
                     />
                     <div className="flex gap-2">

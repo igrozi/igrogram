@@ -223,11 +223,9 @@ const Room = () => {
   const [activeMobileTab, setActiveMobileTab] = useState('chats');
   const [showMobileChatList, setShowMobileChatList] = useState(true);
 
-  // Таймер бездействия для автоматического перевода в офлайн
   const inactivityTimerRef = useRef(null);
-  const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 минут
+  const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
 
-  // Функция обновления статуса онлайн
   const updateOnlineStatus = useCallback(async (isOnline) => {
     if (!user?.user_id || !userProfile?.$id) return;
     try {
@@ -241,36 +239,26 @@ const Room = () => {
     }
   }, [user, userProfile, token]);
 
-  // Сброс таймера бездействия
   const resetInactivityTimer = useCallback(() => {
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
     }
-    // Если пользователь активен - обновляем статус онлайн
     updateOnlineStatus(true);
-    // Запускаем новый таймер
     inactivityTimerRef.current = setTimeout(() => {
       updateOnlineStatus(false);
     }, INACTIVITY_TIMEOUT);
   }, [updateOnlineStatus]);
 
-  // Обработчики событий активности
   useEffect(() => {
     if (!user) return;
-
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-    
     const handleActivity = () => {
       resetInactivityTimer();
     };
-
     events.forEach(event => {
       window.addEventListener(event, handleActivity);
     });
-
-    // Запускаем таймер при монтировании
     resetInactivityTimer();
-
     return () => {
       events.forEach(event => {
         window.removeEventListener(event, handleActivity);
@@ -278,12 +266,10 @@ const Room = () => {
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
       }
-      // При размонтировании (закрытии страницы) переводим в офлайн
       updateOnlineStatus(false);
     };
   }, [user, resetInactivityTimer, updateOnlineStatus]);
 
-  // Обработчик закрытия/обновления страницы
   useEffect(() => {
     const handleBeforeUnload = () => {
       updateOnlineStatus(false);
@@ -462,17 +448,17 @@ const Room = () => {
     }
   };
 
-  const markMessagesAsRead = async (senderId) => {
-    try {
-      await api.markAsRead(senderId, token);
-      if (socket) {
-        socket.emit('mark_read', { sender_id: senderId, receiver_id: user.user_id });
-      }
-      setUnreadCounts(prev => ({ ...prev, [senderId]: 0 }));
-    } catch (err) {
-      console.error("Error marking messages as read:", err);
+const markMessagesAsRead = async (senderId) => {
+  try {
+    await api.markMessagesAsRead(senderId, token);
+    if (socket) {
+      socket.emit('mark_read', { sender_id: senderId, receiver_id: user.user_id });
     }
-  };
+    setUnreadCounts(prev => ({ ...prev, [senderId]: 0 }));
+  } catch (err) {
+    console.error("Error marking messages as read:", err);
+  }
+};
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -827,6 +813,11 @@ const Room = () => {
                               alt=""
                             />
                             {isUserOnline && <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 bg-green-500"></div>}
+                            {unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id && (
+                              <div className="absolute -top-1 -left-1 bg-indigo-500 text-white text-[9px] font-black px-1 py-0.5 rounded-full shadow-md">
+                                {unreadCounts[contact.user_id]}
+                              </div>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-start gap-2">
@@ -835,7 +826,7 @@ const Room = () => {
                             <div className="flex items-center gap-1">
                               <span className="text-xs font-black uppercase tracking-wider text-indigo-500">@{contact.username}</span>
                             </div>
-                            <div className="mt-1 flex items-center justify-between gap-2">
+                            <div className="mt-1 flex items-center gap-2 justify-between">
                               <p className={`text-xs font-bold truncate flex-1 ${(
                                 unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id 
                                   ? 'text-gray-900 dark:text-white' 
@@ -849,13 +840,6 @@ const Room = () => {
                                 </span>
                               )}
                             </div>
-                            {unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id && (
-                              <div className="mt-1 flex justify-end">
-                                <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
-                                  {unreadCounts[contact.user_id]}
-                                </span>
-                              </div>
-                            )}
                           </div>
                         </div>
                       );
@@ -1230,6 +1214,7 @@ const Room = () => {
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden py-2">
             {searchQuery.trim() ? (
+              // ... (поиск без изменений)
               <>
                 <div className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800/30 flex items-center gap-2 sticky top-0 z-10">
                   <Globe size={16} className="text-indigo-600" />
@@ -1274,73 +1259,74 @@ const Room = () => {
                   <MessageCircle size={16} className="text-indigo-600" />
                   <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">ДИАЛОГИ • {recentChats.length}</span>
                 </div>
-                {recentChats.map(contact => {
-                  const isUserOnline = checkIsOnline(contact);
-                  const lastMsg = contact.last_message;
-                  const lastMsgText = lastMsg?.body 
-                    ? (lastMsg.body.length > 50 ? lastMsg.body.substring(0, 50) + '...' : lastMsg.body)
-                    : (lastMsg?.image_url ? '📷 Изображение' : 'Нет сообщений');
-                  const lastMsgTime = lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                  
-                  return (
-                    <div
-                      key={contact.id}
-                      onClick={() => { 
-                        setSelectedContact(contact); 
-                        setReplyingTo(null);
-                        markMessagesAsRead(contact.user_id);
-                      }}
-                      className={`flex items-center gap-4 px-4 py-4 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 ${
-                        selectedContact?.user_id === contact.user_id ? 'bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500' : ''
-                      }`}
-                    >
-                      <div className="relative shrink-0">
-                        <img
-                          src={contact.avatar_url || `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`}
-                          className="w-14 h-14 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
-                          alt=""
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`;
-                          }}
-                        />
-                        {isUserOnline && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-green-500"></div>}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-2">
-                          <span className="font-black text-lg text-gray-900 dark:text-white truncate">{contact.name}</span>
-                        </div>
-                        <div className="flex items-center gap-1 mt-1">
-                          <span className="text-sm font-black uppercase tracking-wider text-indigo-500">@{contact.username}</span>
-                        </div>
-                        <div className="mt-2 flex items-center justify-between gap-2">
-                          <p className={`text-sm font-bold truncate flex-1 ${
-                            unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id 
-                              ? 'text-gray-900 dark:text-white' 
-                              : 'text-gray-500 dark:text-gray-400'
-                          }`}>
-                            {lastMsg?.sender_id === user?.user_id ? `Вы: ${lastMsgText}` : lastMsgText}
-                          </p>
-                          {lastMsgTime && (
-                            <span className="text-xs font-black text-gray-400 whitespace-nowrap shrink-0">
-                              {lastMsgTime}
-                            </span>
+                <AnimatePresence mode="popLayout">
+                  {recentChats.map(contact => {
+                    const isUserOnline = checkIsOnline(contact);
+                    const lastMsg = contact.last_message;
+                    const lastMsgText = lastMsg?.body 
+                      ? (lastMsg.body.length > 50 ? lastMsg.body.substring(0, 50) + '...' : lastMsg.body)
+                      : (lastMsg?.image_url ? '📷 Изображение' : 'Нет сообщений');
+                    const lastMsgTime = lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+
+                    return (
+                      <motion.div
+                        key={contact.id}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+                        onClick={() => {
+                          setSelectedContact(contact);
+                          setReplyingTo(null);
+                          markMessagesAsRead(contact.user_id);
+                        }}
+                        className={`flex items-center gap-4 px-4 py-4 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 ${
+                          selectedContact?.user_id === contact.user_id ? 'bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500' : ''
+                        }`}
+                      >
+                        <div className="relative shrink-0">
+                          <img
+                            src={contact.avatar_url || `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`}
+                            className="w-14 h-14 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
+                            alt=""
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`;
+                            }}
+                          />
+                          {isUserOnline && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-green-500"></div>}
+                          {unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id && (
+                            <div className="absolute -top-1 -left-1 bg-indigo-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-md">
+                              {unreadCounts[contact.user_id]}
+                            </div>
                           )}
                         </div>
-                        {unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id && (
-                          <div className="mt-1.5 flex justify-end">
-                            <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                              {unreadCounts[contact.user_id]}
-                            </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="font-black text-lg text-gray-900 dark:text-white truncate">{contact.name}</span>
                           </div>
-                        )}
-                        {!isUserOnline && !lastMsg && (
-                          <p className="text-xs font-black text-gray-400 mt-1.5">{formatLastSeen(contact.last_seen)}</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="text-sm font-black uppercase tracking-wider text-indigo-500">@{contact.username}</span>
+                          </div>
+                          <div className="mt-2 flex items-center gap-2 justify-between">
+                            <p className={`text-sm font-bold truncate flex-1 ${
+                              unreadCounts[contact.user_id] > 0 && selectedContact?.user_id !== contact.user_id 
+                                ? 'text-gray-900 dark:text-white' 
+                                : 'text-gray-500 dark:text-gray-400'
+                            }`}>
+                              {lastMsg?.sender_id === user?.user_id ? `Вы: ${lastMsgText}` : lastMsgText}
+                            </p>
+                            {lastMsgTime && (
+                              <span className="text-xs font-black text-gray-400 whitespace-nowrap shrink-0">
+                                {lastMsgTime}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
                 {recentChats.length === 0 && (
                   <div className="text-center text-gray-500 text-base py-12 font-black">
                     <MessageCircle size={48} className="mx-auto mb-3 opacity-30" />

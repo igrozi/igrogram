@@ -319,18 +319,14 @@ export const api = {
   },
 
   markMessagesAsRead: async (senderId, token) => {
-    const response = await fetch(`${API_URL}/api/messages/read/${senderId}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to mark messages as read');
-    }
-    
-    return response.json();
+  const response = await fetch(`${API_URL}/api/messages/read/${senderId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) throw new Error('Failed to mark messages as read');
+  return response.json();
   },
 
   deleteMessage: async (messageId, token) => {

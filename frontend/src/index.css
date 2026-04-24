@@ -35,13 +35,3 @@
   transform: scale(0.96);
   pointer-events: none;
 }
-
-input:-webkit-autofill,
-textarea:-webkit-autofill {
-  transition: background-color 999999s ease-in-out 0s !important;
-}
-
-input::-webkit-credentials-auto-fill-button,
-input::-webkit-contacts-auto-fill-button {
-  display: none !important;
-}

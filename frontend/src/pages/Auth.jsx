@@ -13,40 +13,35 @@ const Auth = () => {
   const [tagStatus, setTagStatus] = useState({ loading: false, available: null, message: "" });
   const [passStatus, setPassStatus] = useState({ valid: null, message: "", strength: 0 });
   const [emailStatus, setEmailStatus] = useState({ valid: null });
-  
-  // Состояния для ошибок логина
   const [loginError, setLoginError] = useState({ email: false, password: false });
 
   const navigate = useNavigate();
   const { login, register, user } = useAuth();
 
-  // ===== ФИКС АВТОЗАПОЛНЕНИЯ =====
+  // ---------- ГАРАНТИРОВАННЫЙ ФИКС АВТОЗАПОЛНЕНИЯ ----------
   useEffect(() => {
-    const style = document.createElement('style');
-    style.id = 'auth-autofill-fix';
+    const style = document.createElement("style");
     style.textContent = `
+      /* Отключаем анимацию смены фона */
       input:-webkit-autofill,
       input:-webkit-autofill:hover,
       input:-webkit-autofill:focus,
-      input:-webkit-autofill:active,
-      input:-webkit-autofill:focus-visible {
-        -webkit-box-shadow: 0 0 0 1000px #020617 inset !important;
-        -webkit-text-fill-color: #ffffff !important;
-        caret-color: #ffffff !important;
+      input:-webkit-autofill:active {
         transition: background-color 999999s ease-in-out 0s !important;
+        /* Заменяем белый фон автозаполнения на тёмный цвет страницы */
+        -webkit-box-shadow: 0 0 0 1000px #020617 inset !important;
+        box-shadow: 0 0 0 1000px #020617 inset !important;
+        /* Текст делаем белым */
+        -webkit-text-fill-color: #ffffff !important;
+        color: #ffffff !important;
+        caret-color: #ffffff !important;
       }
     `;
-    
-    const oldStyle = document.getElementById('auth-autofill-fix');
-    if (oldStyle) oldStyle.remove();
     document.head.appendChild(style);
-    
-    return () => {
-      const styleToRemove = document.getElementById('auth-autofill-fix');
-      if (styleToRemove) styleToRemove.remove();
-    };
+    return () => style.remove();
   }, []);
 
+  // Навигация при успешном входе
   useEffect(() => {
     if (user) {
       navigate("/");
@@ -167,7 +162,6 @@ const Auth = () => {
         result = await login(data.email, data.password);
         
         if (!result.success) {
-          // При ошибке логина подсвечиваем оба поля красным
           setLoginError({ email: true, password: true });
           setError(result.error || "Invalid email or password");
         }
@@ -326,7 +320,6 @@ const Auth = () => {
                 {showPassword ? <EyeOff size={16} strokeWidth={2.5} /> : <Eye size={16} strokeWidth={2.5} />}
               </button>
               
-              {/* Индикатор силы пароля для регистрации */}
               {!isLogin && (
                 <>
                   <div className="absolute -bottom-1 left-4 right-4 h-[2px] bg-slate-800 rounded-full overflow-hidden">
@@ -354,7 +347,6 @@ const Auth = () => {
               )}
             </div>
 
-            {/* Блок для ошибок */}
             <div className={`${!isLogin ? "mt-6" : "mt-2"} h-5 flex items-center justify-center`}>
               <AnimatePresence>
                 {error && (
@@ -370,7 +362,6 @@ const Auth = () => {
               </AnimatePresence>
             </div>
 
-            {/* Кнопка отправки */}
             <motion.button 
               whileHover={{ scale: 1.01 }} 
               whileTap={{ scale: 0.99 }} 
