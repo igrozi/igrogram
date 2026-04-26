@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 web: npm install --production=false && npm start
+=======
+web: node server.js
+>>>>>>> 301ec67a0905b7559e76591cc7d03e12cb7d38c6
