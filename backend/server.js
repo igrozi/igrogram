@@ -14,8 +14,6 @@ import postsRoutes from "./routes/posts.js";
 import uploadRoutes from "./routes/upload.js";
 import ratingStatsRouter from "./routes/ratingStats.js";
 import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 
 dotenv.config();
 

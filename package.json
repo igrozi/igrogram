@@ -1,7 +1,0 @@
-{
-  "name": "igrogram",
-  "scripts": {
-    "postinstall": "cd backend && npm install",
-    "start": "cd backend && node server.js"
-  }
-}
