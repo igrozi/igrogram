@@ -14,7 +14,7 @@ import postsRoutes from "./routes/posts.js";
 import uploadRoutes from "./routes/upload.js";
 import ratingStatsRouter from "./routes/ratingStats.js";
 import fs from "fs";
-import { pool } from "./db/pool.js"; // Не забудьте импортировать pool!
+import { pool } from "./db/pool.js";
 
 dotenv.config();
 
@@ -51,7 +51,6 @@ const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Разрешаем запросы без origin (например, из Postman)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -59,48 +58,20 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true, // Важно для отправки cookies / Authorization
+  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Явно обрабатываем preflight
+app.options("*", cors(corsOptions)); // Явно обрабатываем OPTIONS
 
-// Helmet настраиваем после CORS и не блокируем нужные заголовки
+// Helmet (можно временно отключить для диагностики)
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
-    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   }),
 );
-
-app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// ----- МАРШРУТЫ -----
-app.use("/api/auth", authRoutes);
-app.use("/api/users", usersRoutes);
-app.use("/api/messages", messagesRoutes);
-app.use("/api/posts", postsRoutes);
-app.use("/api/upload", uploadRoutes);
-app.use("/api/ratings", ratingStatsRouter);
-
-// Health check
-app.get("/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
-});
-
-// 404
-app.use("*", (req, res) => {
-  res.status(404).json({ error: `Cannot ${req.method} ${req.originalUrl}` });
-});
-
-// Обработка ошибок
-app.use((err, req, res, next) => {
-  console.error("Error:", err);
-  res.status(500).json({ error: err.message || "Internal server error" });
-});
 
 // ----- SOCKET.IO -----
 const io = new Server(httpServer, {
