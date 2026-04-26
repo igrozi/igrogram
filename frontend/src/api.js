@@ -39,7 +39,8 @@ export const api = {
     return { success: true, ...data };
   },
 
-  verifyToken: async (token) => {
+  // Переименовал verifyToken в verify, чтобы AuthContext мог его вызывать
+  verify: async (token) => {
     const response = await fetch(`${API_URL}/api/auth/verify`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -319,14 +320,14 @@ export const api = {
   },
 
   markMessagesAsRead: async (senderId, token) => {
-  const response = await fetch(`${API_URL}/api/messages/read/${senderId}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) throw new Error('Failed to mark messages as read');
-  return response.json();
+    const response = await fetch(`${API_URL}/api/messages/read/${senderId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) throw new Error('Failed to mark messages as read');
+    return response.json();
   },
 
   deleteMessage: async (messageId, token) => {
@@ -412,6 +413,23 @@ export const api = {
       throw new Error(error.message || 'Failed to delete account');
     }
     
+    return response.json();
+  },
+
+  // ===== СМЕНА ПАРОЛЯ =====
+  changePassword: async (passwordData, token) => {
+    const response = await fetch(`${API_URL}/api/users/change-password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(passwordData),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to change password');
+    }
     return response.json();
   },
 };

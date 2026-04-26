@@ -5,8 +5,6 @@ import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
-// ===== КОНКРЕТНЫЕ РОУТЫ (должны быть ПЕРЕД параметризованными) =====
-
 // Получить всех пользователей
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -41,10 +39,8 @@ router.get('/search', authenticate, async (req, res) => {
   }
 });
 
-// Проверка пароля (ДОЛЖЕН БЫТЬ ПЕРЕД /:userId)
+// Проверка пароля
 router.post('/verify-password', authenticate, async (req, res) => {
-  console.log('Verify password request:', req.body);
-  
   const { userId, password } = req.body;
   const currentUserId = req.userId;
   
@@ -58,8 +54,6 @@ router.post('/verify-password', authenticate, async (req, res) => {
       [userId]
     );
     
-    console.log('User found:', result.rows.length > 0);
-    
     if (result.rows.length === 0) {
       return res.status(404).json({ valid: false, message: 'User not found' });
     }
@@ -67,14 +61,10 @@ router.post('/verify-password', authenticate, async (req, res) => {
     const user = result.rows[0];
     
     if (!user.password_hash) {
-      console.error('No password_hash found for user');
       return res.status(500).json({ valid: false, message: 'Invalid user data' });
     }
     
     const isValid = await bcrypt.compare(password, user.password_hash);
-    
-    console.log('Password valid:', isValid);
-    
     res.json({ valid: isValid });
   } catch (error) {
     console.error('Error verifying password:', error);
@@ -151,21 +141,32 @@ router.get('/profile/:username', authenticate, async (req, res) => {
   }
 });
 
-// Обновить профиль
+// ===== ОБНОВЛЕНИЕ ПРОФИЛЯ (единственный и правильный, с поддержкой email) =====
 router.put('/profile', authenticate, async (req, res) => {
-  const { userId, name, bio, phone, notifications, avatar_url } = req.body;
+  const { userId, name, bio, phone, notifications, avatar_url, email } = req.body;
   
   try {
+    if (email) {
+      const existing = await pool.query(
+        'SELECT user_id FROM profiles WHERE email = $1 AND user_id != $2',
+        [email, userId]
+      );
+      if (existing.rows.length > 0) {
+        return res.status(400).json({ error: 'Email already in use' });
+      }
+    }
+
     const result = await pool.query(
       `UPDATE profiles 
        SET name = COALESCE($1, name),
            bio = COALESCE($2, bio),
            phone = COALESCE($3, phone),
            notifications = COALESCE($4, notifications),
-           avatar_url = COALESCE($5, avatar_url)
-       WHERE user_id = $6
+           avatar_url = COALESCE($5, avatar_url),
+           email = COALESCE($6, email)
+       WHERE user_id = $7
        RETURNING id, user_id, username, name, email, avatar_url, bio, phone, notifications`,
-      [name, bio, phone, notifications, avatar_url, userId]
+      [name, bio, phone, notifications, avatar_url, email, userId]
     );
     
     res.json(result.rows[0]);
@@ -175,14 +176,47 @@ router.put('/profile', authenticate, async (req, res) => {
   }
 });
 
-// ===== ПАРАМЕТРИЗОВАННЫЕ РОУТЫ (должны быть ПОСЛЕ конкретных) =====
+// Смена пароля
+router.put('/change-password', authenticate, async (req, res) => {
+  const { userId, currentPassword, newPassword } = req.body;
+  
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'currentPassword and newPassword are required' });
+  }
+  
+  try {
+    const user = await pool.query(
+      'SELECT password_hash FROM profiles WHERE user_id = $1',
+      [userId]
+    );
+    
+    if (user.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const valid = await bcrypt.compare(currentPassword, user.rows[0].password_hash);
+    if (!valid) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    await pool.query(
+      'UPDATE profiles SET password_hash = $1 WHERE user_id = $2',
+      [hashedPassword, userId]
+    );
+    
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error in changePassword:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// Удаление аккаунта
+// Удаление аккаунта (должен быть последним из-за параметра :userId)
 router.delete('/:userId', authenticate, async (req, res) => {
   const { userId } = req.params;
   const currentUserId = req.userId;
-  
-  console.log('Delete account request for:', userId);
   
   if (userId !== currentUserId) {
     return res.status(403).json({ message: 'Unauthorized' });
@@ -193,25 +227,13 @@ router.delete('/:userId', authenticate, async (req, res) => {
   try {
     await client.query('BEGIN');
     
-    console.log('Deleting messages...');
     await client.query('DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1', [userId]);
-    
-    console.log('Deleting comments...');
     await client.query('DELETE FROM comments WHERE author_id = $1', [userId]);
-    
-    console.log('Deleting posts...');
     await client.query('DELETE FROM posts WHERE author_id = $1', [userId]);
-    
-    console.log('Deleting ratings...');
     await client.query('DELETE FROM ratings WHERE rater_id = $1 OR rated_user_id = $1', [userId]);
-    
-    console.log('Deleting profile...');
     await client.query('DELETE FROM profiles WHERE user_id = $1', [userId]);
     
     await client.query('COMMIT');
-    
-    console.log('Account deleted successfully');
-    
     res.json({ success: true, message: 'Account deleted successfully' });
   } catch (error) {
     await client.query('ROLLBACK');
