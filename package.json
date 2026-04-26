@@ -1,0 +1,6 @@
+{
+  "name": "igrogram",
+  "scripts": {
+    "start": "cd backend && npm start"
+  }
+}
