@@ -14,12 +14,14 @@ import postsRoutes from "./routes/posts.js";
 import uploadRoutes from "./routes/upload.js";
 import ratingStatsRouter from "./routes/ratingStats.js";
 import fs from "fs";
+import { pool } from "./db/pool.js"; // Не забудьте импортировать pool!
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Инициализация БД
 async function initDatabase() {
   try {
     const sqlPath = path.join(__dirname, "db", "init.sql");
@@ -38,37 +40,45 @@ initDatabase();
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.CORS_ORIGIN?.split(",") || [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost",
-    ],
-    credentials: true,
-  },
-});
 
-// Middleware
+// ----- НАСТРОЙКА CORS (ДО ВСЕХ МАРШРУТОВ) -----
+// Разрешённые источники (из переменной окружения или по умолчанию)
+const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost",
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Разрешаем запросы без origin (например, из Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, // Важно для отправки cookies / Authorization
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Явно обрабатываем preflight
+
+// Helmet настраиваем после CORS и не блокируем нужные заголовки
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   }),
 );
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN?.split(",") || [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost",
-    ],
-    credentials: true,
-  }),
-);
+
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
+// ----- МАРШРУТЫ -----
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/messages", messagesRoutes);
@@ -76,23 +86,30 @@ app.use("/api/posts", postsRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/ratings", ratingStatsRouter);
 
-// Health check endpoint
+// Health check
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// 404 handler
+// 404
 app.use("*", (req, res) => {
   res.status(404).json({ error: `Cannot ${req.method} ${req.originalUrl}` });
 });
 
-// Error handler
+// Обработка ошибок
 app.use((err, req, res, next) => {
   console.error("Error:", err);
   res.status(500).json({ error: err.message || "Internal server error" });
 });
 
-// Socket.io
+// ----- SOCKET.IO -----
+const io = new Server(httpServer, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+});
+
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
@@ -144,6 +161,7 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
-  console.log(`⚡ Igrogram URL: http://localhost`);
+  console.log(
+    `📍 Health check: https://igrogram-production.up.railway.app/health`,
+  );
 });
