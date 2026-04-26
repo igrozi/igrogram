@@ -1,21 +1,18 @@
-FROM node:latest
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Копируем package.json и package-lock.json из папки backend
+# Копируем package.json (и, если есть, package-lock.json)
 COPY backend/package*.json ./backend/
 
-# Устанавливаем зависимости
-RUN cd backend && npm ci --only=production
+# Устанавливаем зависимости (не требует lock-файл)
+RUN cd backend && npm install --omit=dev
 
-# Копируем весь код backend
+# Копируем весь код backend поверх
 COPY backend/ ./backend/
 
-# Устанавливаем рабочую директорию
 WORKDIR /app/backend
 
-# Открываем порт
 EXPOSE 5000
 
-# Запускаем сервер
 CMD ["node", "server.js"]
