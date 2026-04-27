@@ -27,12 +27,13 @@ const httpServer = createServer(app);
 // ===== КРИТИЧНО: CORS НАСТРОЙКА ПЕРВОЙ =====
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  // Разрешаем все источники для теста (потом ограничите)
+  // Разрешаем все источники для теста
   res.header("Access-Control-Allow-Origin", origin || "*");
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   
+  // Обрабатываем preflight запросы
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
@@ -40,10 +41,13 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(helmet({ 
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+}));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Маршруты
+// ===== МАРШРУТЫ =====
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/messages", messagesRoutes);
@@ -51,9 +55,28 @@ app.use("/api/posts", postsRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/ratings", ratingStatsRouter);
 
-// Health check
+// ===== HEALTH CHECK =====
 app.get("/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  res.status(200).json({ 
+    status: "ok", 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+app.get("/ping", (req, res) => {
+  res.status(200).send("pong");
+});
+
+// ===== 404 =====
+app.use("*", (req, res) => {
+  res.status(404).json({ error: `Cannot ${req.method} ${req.originalUrl}` });
+});
+
+// ===== ERROR HANDLER =====
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+  res.status(500).json({ error: err.message || "Internal server error" });
 });
 
 // ===== ИНИЦИАЛИЗАЦИЯ БД =====
@@ -63,33 +86,81 @@ async function initDatabase() {
     if (fs.existsSync(sqlPath)) {
       const sql = fs.readFileSync(sqlPath, "utf8");
       await pool.query(sql);
-      console.log("✅ Database initialized");
+      console.log("✅ Database tables initialized");
+    } else {
+      console.log("ℹ️ init.sql not found, skipping");
     }
   } catch (err) {
-    console.log("ℹ️ DB init skipped:", err.message);
+    if (err.code === "42P07") {
+      console.log("ℹ️ Tables already exist");
+    } else {
+      console.error("⚠️ DB init warning:", err.message);
+    }
   }
 }
 
-const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, "0.0.0.0", async () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  await initDatabase();
-});
-
-// Socket.IO
+// ===== SOCKET.IO =====
 const io = new Server(httpServer, {
-  cors: { origin: true, credentials: true }
+  cors: { 
+    origin: true, 
+    credentials: true,
+    methods: ["GET", "POST"]
+  }
 });
 
 io.on("connection", (socket) => {
-  console.log("Client connected:", socket.id);
+  console.log("🔌 Client connected:", socket.id);
+
   socket.on("join", (userId) => {
-    if (userId) socket.join(`user_${userId}`);
+    if (userId) {
+      socket.join(`user_${userId}`);
+      console.log(`👤 User ${userId} joined room`);
+    }
   });
+
   socket.on("send_message", (data) => {
     if (data.receiver_id) {
       io.to(`user_${data.receiver_id}`).emit("new_message", data);
       io.to(`user_${data.sender_id}`).emit("message_sent", data);
     }
   });
+
+  socket.on("typing", (data) => {
+    if (data.receiver_id) {
+      socket.to(`user_${data.receiver_id}`).emit("user_typing", {
+        sender_id: data.sender_id,
+        sender_name: data.sender_name,
+      });
+    }
+  });
+
+  socket.on("mark_read", (data) => {
+    if (data.sender_id) {
+      io.to(`user_${data.sender_id}`).emit("messages_read", {
+        receiver_id: data.receiver_id,
+      });
+    }
+  });
+
+  socket.on("delete_message", (data) => {
+    console.log("🗑️ Delete message event:", data);
+    if (data.chatId) {
+      io.to(`user_${data.chatId}`).emit("message_deleted", {
+        messageId: data.messageId,
+      });
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔌 Client disconnected:", socket.id);
+  });
+});
+
+// ===== ЗАПУСК СЕРВЕРА (КРИТИЧНО: "0.0.0.0") =====
+const PORT = process.env.PORT || 5000;
+httpServer.listen(PORT, "0.0.0.0", async () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Health check: /health`);
+  console.log(`✅ Ping endpoint: /ping`);
+  await initDatabase();
 });

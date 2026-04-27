@@ -19,5 +19,10 @@ const poolConfig = process.env.DATABASE_URL
 
 export const pool = new Pool(poolConfig);
 
-pool.on("connect", () => console.log("✅ PostgreSQL connected"));
-pool.on("error", (err) => console.error("❌ PostgreSQL error:", err));
+pool.on("connect", () => {
+  console.log("✅ PostgreSQL connected");
+});
+
+pool.on("error", (err) => {
+  console.error("❌ PostgreSQL error:", err);
+});

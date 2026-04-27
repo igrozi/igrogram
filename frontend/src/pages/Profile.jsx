@@ -9,6 +9,8 @@ import {
   Reply, Pin, PinOff, Users, BarChart3
 } from 'lucide-react';
 
+const SOCKET_URL = import.meta.env.VITE_API_URL || 'https://igrogram-production.up.railway.app';
+
 const checkIsOnline = (profile) => {
   if (!profile?.is_online) return false;
   if (!profile?.last_seen) return false;

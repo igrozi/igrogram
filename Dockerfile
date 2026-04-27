@@ -2,13 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Копируем package.json (и, если есть, package-lock.json)
+# Копируем package.json из папки backend
 COPY backend/package*.json ./backend/
 
-# Устанавливаем зависимости (не требует lock-файл)
-RUN cd backend && npm install --omit=dev
+# Устанавливаем зависимости
+RUN cd backend && npm install
 
-# Копируем весь код backend поверх
+# Копируем весь код backend
 COPY backend/ ./backend/
 
 WORKDIR /app/backend
