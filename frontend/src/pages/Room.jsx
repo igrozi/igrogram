@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
+
 const SOCKET_URL =
   import.meta.env.VITE_API_URL || "https://igrogram-production.up.railway.app";
 
@@ -310,68 +312,8 @@ const Room = () => {
   const [activeMobileTab, setActiveMobileTab] = useState("chats");
   const [showMobileChatList, setShowMobileChatList] = useState(true);
 
-  const inactivityTimerRef = useRef(null);
-  const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
-
-  const updateOnlineStatus = useCallback(
-    async (isOnline) => {
-      if (!user?.user_id) return; // достаточно проверить только user
-      try {
-        await api.updateProfile(
-          {
-            userId: user.user_id,
-            is_online: isOnline,
-            last_seen: new Date().toISOString(),
-          },
-          token,
-        );
-      } catch (err) {
-        console.error("Ошибка обновления статуса:", err);
-      }
-    },
-    [user, token],
-  );
-
-  const resetInactivityTimer = useCallback(() => {
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current);
-    }
-    updateOnlineStatus(true);
-    inactivityTimerRef.current = setTimeout(() => {
-      updateOnlineStatus(false);
-    }, INACTIVITY_TIMEOUT);
-  }, [updateOnlineStatus]);
-
-  useEffect(() => {
-    if (!user) return;
-    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
-    const handleActivity = () => {
-      resetInactivityTimer();
-    };
-    events.forEach((event) => {
-      window.addEventListener(event, handleActivity);
-    });
-    resetInactivityTimer();
-    return () => {
-      events.forEach((event) => {
-        window.removeEventListener(event, handleActivity);
-      });
-      if (inactivityTimerRef.current) {
-        clearTimeout(inactivityTimerRef.current);
-      }
-      updateOnlineStatus(false);
-    };
-  }, [user, resetInactivityTimer, updateOnlineStatus]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      updateOnlineStatus(false);
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [updateOnlineStatus]);
+  // Управление онлайн-статусом
+  useOnlineStatus(user, token);
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -396,6 +338,7 @@ const Room = () => {
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
+      console.log("Socket connected");
       newSocket.emit("join", user.user_id);
     });
 
@@ -564,9 +507,6 @@ const Room = () => {
     e.preventDefault();
     if ((!messageBody.trim() && !imageFile) || !selectedContact || isSending)
       return;
-
-    await updateOnlineStatus(true);
-    resetInactivityTimer();
 
     setIsSending(true);
 
