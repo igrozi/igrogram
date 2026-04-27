@@ -21,6 +21,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Создаём папки для загрузок
 const uploadDirs = [
   "uploads",
   "uploads/avatars",
@@ -46,9 +47,8 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "")
 
 // Функция проверки origin
 const isOriginAllowed = (origin) => {
-  if (!origin) return true; // разрешить запросы без origin (например, curl)
+  if (!origin) return true;
   if (allowedOrigins.includes(origin)) return true;
-  // Разрешить все поддомены vercel.app (для preview-деплоев)
   if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)) return true;
   return false;
 };
@@ -70,7 +70,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-// Helmet должен идти после CORS, но не должен ломать CORS
+// Helmet
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -79,9 +79,41 @@ app.use(
 );
 
 app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Логирование (поможет отладить)
+// ----- СТАТИЧЕСКИЕ ФАЙЛЫ С ПРАВИЛЬНЫМИ ЗАГОЛОВКАМИ ДЛЯ ИЗОБРАЖЕНИЙ -----
+app.use("/uploads", (req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  next();
+}, express.static(path.join(__dirname, "uploads"), {
+  setHeaders: (res, filePath, stat) => {
+    if (filePath.match(/\.(jpg|jpeg)$/i)) {
+      res.setHeader("Content-Type", "image/jpeg");
+    } else if (filePath.match(/\.png$/i)) {
+      res.setHeader("Content-Type", "image/png");
+    } else if (filePath.match(/\.gif$/i)) {
+      res.setHeader("Content-Type", "image/gif");
+    } else if (filePath.match(/\.webp$/i)) {
+      res.setHeader("Content-Type", "image/webp");
+    }
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  }
+}));
+
+// Логирование
 app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.url} - Origin: ${req.headers.origin}`);
   next();
@@ -98,6 +130,24 @@ app.use("/api/ratings", ratingStatsRouter);
 // Health check
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Проверка username (добавляем сюда для удобства)
+app.get("/api/users/check-username/:username", async (req, res) => {
+  const { username } = req.params;
+  try {
+    const result = await pool.query(
+      "SELECT username FROM profiles WHERE username = $1",
+      [username.toLowerCase()]
+    );
+    res.json({ 
+      available: result.rows.length === 0,
+      message: result.rows.length === 0 ? "Available" : "Username already taken"
+    });
+  } catch (error) {
+    console.error("Error checking username:", error);
+    res.status(500).json({ available: false, message: "Server error" });
+  }
 });
 
 // 404
