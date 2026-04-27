@@ -24,16 +24,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
-// ===== CORS НАСТРОЙКА =====
+// ===== CORS - ДОЛЖЕН БЫТЬ САМЫМ ПЕРВЫМ =====
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  res.header("Access-Control-Allow-Origin", origin || "*");
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  // Разрешаем запросы с любого источника (для теста)
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   
+  // Для preflight запросов сразу отвечаем 200
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
+    return res.status(200).end();
   }
   next();
 });
@@ -44,7 +45,7 @@ app.use(helmet({
 }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ===== ЛОГИРОВАНИЕ ВСЕХ ЗАПРОСОВ =====
+// Логирование запросов
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
@@ -102,7 +103,11 @@ async function initDatabase() {
 
 // ===== SOCKET.IO =====
 const io = new Server(httpServer, {
-  cors: { origin: true, credentials: true }
+  cors: { 
+    origin: true, 
+    credentials: true,
+    methods: ["GET", "POST"]
+  }
 });
 
 io.on("connection", (socket) => {
