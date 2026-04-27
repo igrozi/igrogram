@@ -2,13 +2,10 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Копируем package.json из папки backend
+# Копируем backend
 COPY backend/package*.json ./backend/
-
-# Устанавливаем зависимости
 RUN cd backend && npm install
 
-# Копируем весь код backend
 COPY backend/ ./backend/
 
 WORKDIR /app/backend

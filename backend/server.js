@@ -156,11 +156,17 @@ io.on("connection", (socket) => {
   });
 });
 
-// ===== ЗАПУСК СЕРВЕРА (КРИТИЧНО: "0.0.0.0") =====
 const PORT = process.env.PORT || 5000;
+
+// Явно слушаем все интерфейсы и выводим реальный порт
 httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Server listening on 0.0.0.0:${PORT}`);
+  console.log(`✅ Health check available at /health`);
 });
 
-// Инициализация БД отдельно
+// Ждём запуска сервера, потом инициализируем БД
 initDatabase().catch(console.error);
+
+// Экспортируем для Railway (важно!)
+export default app;
