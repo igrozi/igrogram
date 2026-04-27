@@ -336,6 +336,10 @@ const Profile = () => {
       
       setProfile(prev => ({ ...prev, bio: updated.bio }));
       setEditingBio(false);
+      
+      // 👇 Перезагружаем данные профиля после обновления
+      await fetchProfileData();
+      
     } catch (error) {
       alert("Ошибка сохранения биографии.");
       console.error("Ошибка при обновлении биографии:", error);
