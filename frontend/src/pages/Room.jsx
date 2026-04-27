@@ -315,7 +315,7 @@ const Room = () => {
 
   const updateOnlineStatus = useCallback(
     async (isOnline) => {
-      if (!user?.user_id || !userProfile?.$id) return;
+      if (!user?.user_id || !userProfile?.user_id) return;
       try {
         await api.updateProfile(
           {
