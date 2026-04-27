@@ -24,32 +24,37 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
-// ----- НАСТРОЙКА CORS (ПРОСТАЯ И НАДЁЖНАЯ) -----
-const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "https://igrogram.vercel.app",
-];
+// ----- НАСТРОЙКА CORS (БЕЗОПАСНО) -----
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+// Функция проверки origin
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // разрешить запросы без origin (например, curl)
+  if (allowedOrigins.includes(origin)) return true;
+  // Разрешить все поддомены vercel.app (для preview-деплоев)
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)) return true;
+  return false;
+};
 
 const corsOptions = {
-  /*origin: function (origin, callback) {
-    // Разрешаем запросы без origin (например, из curl)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+  origin: function (origin, callback) {
+    if (isOriginAllowed(origin)) {
       callback(null, true);
     } else {
       console.log(`❌ CORS blocked: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
-  },*/
-  origin: true,
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Явная обработка preflight
+app.options("*", cors(corsOptions));
 
 // Helmet должен идти после CORS, но не должен ломать CORS
 app.use(
