@@ -5,6 +5,17 @@ import { pool } from '../db/pool.js';
 
 const router = express.Router();
 
+// CORS для всех маршрутов auth
+router.use((req, res, next) => {
+  const origin = req.headers.origin;
+  res.header("Access-Control-Allow-Origin", origin || "https://igrogram.vercel.app");
+  res.header("Access-Control-Allow-Credentials", "true");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Регистрация
 router.post('/register', async (req, res) => {
   const { email, password, name, username } = req.body;
