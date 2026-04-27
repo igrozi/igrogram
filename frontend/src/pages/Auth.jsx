@@ -123,10 +123,25 @@ const Auth = () => {
       return;
     }
     
-    setTagStatus({ loading: true, available: null, message: "Checking..." });
-
+     // Реальная проверка на бэкенде
+  setTagStatus({ loading: true, available: null, message: "Checking..." });
+  
+  try {
+    // Вызываем API поиска, чтобы проверить, занят ли username
+    const users = await api.searchUsers(username, null); // без токена для регистрации
+    const isTaken = users.some(u => u.username === username.toLowerCase());
     
-  }, []);
+    if (isTaken) {
+      setTagStatus({ loading: false, available: false, message: "Taken" });
+    } else {
+      setTagStatus({ loading: false, available: true, message: "Available" });
+    }
+  } catch (error) {
+    // Если API недоступен, просто считаем username доступным
+    console.error("Username check error:", error);
+    setTagStatus({ loading: false, available: true, message: "Available" });
+  }
+}, []);
 
   useEffect(() => {
     if (!isLogin && data.username) {
