@@ -24,54 +24,50 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
-// ===== CORS - ПЕРВЫЙ МИДЛВЕР (ДЛЯ ВСЕХ ЗАПРОСОВ) =====
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  // Устанавливаем заголовки для каждого запроса
-  res.setHeader("Access-Control-Allow-Origin", origin || "https://igrogram.vercel.app");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  
-  // Обрабатываем OPTIONS
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-  next();
-});
+// ----- НАСТРОЙКА CORS (ПРОСТАЯ И НАДЁЖНАЯ) -----
+const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://igrogram.vercel.app",
+];
 
-// ===== ПЕРЕХВАТ res.status ДЛЯ ДОБАВЛЕНИЯ CORS В ОШИБКИ =====
-app.use((req, res, next) => {
-  const originalStatus = res.status;
-  const origin = req.headers.origin;
-  
-  res.status = function(code) {
-    res.setHeader("Access-Control-Allow-Origin", origin || "https://igrogram.vercel.app");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    return originalStatus.call(this, code);
-  };
-  
-  next();
-});
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Разрешаем запросы без origin (например, из curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log(`❌ CORS blocked: ${origin}`);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Явная обработка preflight
+
+// Helmet должен идти после CORS, но не должен ломать CORS
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  }),
+);
 
 app.use(express.json());
-app.use(helmet({ 
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Логирование
+// Логирование (поможет отладить)
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log(`[${req.method}] ${req.url} - Origin: ${req.headers.origin}`);
   next();
 });
 
-app.get("/test-cors", (req, res) => {
-  res.json({ message: "CORS works!" });
-});
-
-// ===== МАРШРУТЫ =====
+// ----- МАРШРУТЫ -----
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/messages", messagesRoutes);
@@ -79,31 +75,23 @@ app.use("/api/posts", postsRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/ratings", ratingStatsRouter);
 
-// ===== HEALTH CHECK =====
+// Health check
 app.get("/health", (req, res) => {
-  res.status(200).json({ 
-    status: "ok", 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.get("/ping", (req, res) => {
-  res.status(200).send("pong");
-});
-
-// ===== 404 =====
+// 404
 app.use("*", (req, res) => {
   res.status(404).json({ error: `Cannot ${req.method} ${req.originalUrl}` });
 });
 
-// ===== ERROR HANDLER =====
+// Error handler
 app.use((err, req, res, next) => {
   console.error("Error:", err);
   res.status(500).json({ error: err.message || "Internal server error" });
 });
 
-// ===== ИНИЦИАЛИЗАЦИЯ БД =====
+// Инициализация БД
 async function initDatabase() {
   try {
     const sqlPath = path.join(__dirname, "db", "init.sql");
@@ -121,32 +109,25 @@ async function initDatabase() {
   }
 }
 
-// ===== SOCKET.IO =====
+// Socket.IO
 const io = new Server(httpServer, {
-  cors: { 
-    origin: "https://igrogram.vercel.app",
+  cors: {
+    origin: allowedOrigins,
     credentials: true,
-    methods: ["GET", "POST"]
-  }
+  },
 });
 
 io.on("connection", (socket) => {
   console.log("🔌 Client connected:", socket.id);
-
   socket.on("join", (userId) => {
-    if (userId) {
-      socket.join(`user_${userId}`);
-      console.log(`👤 User ${userId} joined room`);
-    }
+    if (userId) socket.join(`user_${userId}`);
   });
-
   socket.on("send_message", (data) => {
     if (data.receiver_id) {
       io.to(`user_${data.receiver_id}`).emit("new_message", data);
       io.to(`user_${data.sender_id}`).emit("message_sent", data);
     }
   });
-
   socket.on("typing", (data) => {
     if (data.receiver_id) {
       socket.to(`user_${data.receiver_id}`).emit("user_typing", {
@@ -155,7 +136,6 @@ io.on("connection", (socket) => {
       });
     }
   });
-
   socket.on("mark_read", (data) => {
     if (data.sender_id) {
       io.to(`user_${data.sender_id}`).emit("messages_read", {
@@ -163,26 +143,22 @@ io.on("connection", (socket) => {
       });
     }
   });
-
   socket.on("delete_message", (data) => {
-    console.log("🗑️ Delete message:", data.messageId);
     if (data.chatId) {
       io.to(`user_${data.chatId}`).emit("message_deleted", {
         messageId: data.messageId,
       });
     }
   });
-
-  socket.on("disconnect", () => {
-    console.log("🔌 Client disconnected:", socket.id);
-  });
+  socket.on("disconnect", () =>
+    console.log("🔌 Client disconnected:", socket.id),
+  );
 });
 
-// ===== ЗАПУСК =====
+// Запуск
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, "0.0.0.0", async () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`✅ NODE_ENV: ${process.env.NODE_ENV || "development"}`);
-  console.log(`✅ DATABASE_URL: ${process.env.DATABASE_URL ? "SET" : "NOT SET"}`);
+  console.log(`✅ CORS_ORIGIN = ${process.env.CORS_ORIGIN || "not set"}`);
   await initDatabase();
 });
