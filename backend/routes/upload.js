@@ -10,13 +10,8 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-// Гарантированное создание папок
-const folders = [
-  "uploads",
-  "uploads/avatars",
-  "uploads/chat-images",
-  "uploads/posts",
-];
+// Создаём папки
+const folders = ["uploads", "uploads/avatars", "uploads/chat-images", "uploads/posts"];
 folders.forEach((folder) => {
   const fullPath = path.join(__dirname, "..", folder);
   if (!fs.existsSync(fullPath)) {
@@ -48,30 +43,21 @@ const fileFilter = (req, file, cb) => {
   else cb(new Error("Only images allowed"));
 };
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter,
-});
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 }, fileFilter });
 
 router.post("/", authenticate, upload.single("file"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
-  // Определяем подпапку для чистого URL
   let sub = "";
   if (req.query.type === "avatar") sub = "avatars";
   else if (req.query.type === "chat") sub = "chat-images";
   else if (req.query.type === "post") sub = "posts";
 
-  // Принудительно HTTPS в продакшене
-  const isProd = process.env.NODE_ENV === "production";
-  const protocol = isProd
-    ? "https"
-    : req.headers["x-forwarded-proto"] || req.protocol;
+  // Формируем правильный URL
   const host = req.get("host");
-  const url = `${protocol}://${host}/uploads/${sub ? sub + "/" : ""}${req.file.filename}`;
+  const url = `https://${host}/uploads/${sub ? sub + "/" : ""}${req.file.filename}`;
 
   console.log(`✅ Uploaded: ${url}`);
   res.json({ url });
