@@ -315,7 +315,7 @@ const Room = () => {
 
   const updateOnlineStatus = useCallback(
     async (isOnline) => {
-      if (!user?.user_id || !userProfile?.user_id) return;
+      if (!user?.user_id) return; // достаточно проверить только user
       try {
         await api.updateProfile(
           {
@@ -329,7 +329,7 @@ const Room = () => {
         console.error("Ошибка обновления статуса:", err);
       }
     },
-    [user, userProfile, token],
+    [user, token],
   );
 
   const resetInactivityTimer = useCallback(() => {
@@ -564,6 +564,9 @@ const Room = () => {
     e.preventDefault();
     if ((!messageBody.trim() && !imageFile) || !selectedContact || isSending)
       return;
+
+    await updateOnlineStatus(true);
+    resetInactivityTimer();
 
     setIsSending(true);
 
