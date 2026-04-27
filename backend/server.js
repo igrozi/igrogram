@@ -24,42 +24,34 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
-// ===== ГАРАНТИРОВАННЫЙ CORS Middleware (ДО ВСЕХ МАРШРУТОВ) =====
+// ===== CORS - ПЕРВЫЙ МИДЛВЕР (ДЛЯ ВСЕХ ЗАПРОСОВ) =====
 app.use((req, res, next) => {
-  // Сохраняем оригинальные методы
-  const originalJson = res.json;
-  const originalSend = res.send;
   const origin = req.headers.origin;
-
-  // Функция для установки заголовков
-  const setCorsHeaders = () => {
-    const allowedOrigin = origin || "https://igrogram.vercel.app";
-    res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  };
-
-  // Переопределяем res.json, чтобы установить заголовки перед отправкой JSON
-  res.json = function(body) {
-    setCorsHeaders();
-    return originalJson.call(this, body);
-  };
-
-  // Переопределяем res.send, чтобы установить заголовки перед отправкой
-  res.send = function(body) {
-    setCorsHeaders();
-    return originalSend.call(this, body);
-  };
-
-  // Устанавливаем заголовки для самого ответа
-  setCorsHeaders();
-
-  // Обрабатываем preflight (OPTIONS) запрос
+  
+  // Устанавливаем заголовки для каждого запроса
+  res.setHeader("Access-Control-Allow-Origin", origin || "https://igrogram.vercel.app");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  
+  // Обрабатываем OPTIONS
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
+  next();
+});
 
+// ===== ПЕРЕХВАТ res.status ДЛЯ ДОБАВЛЕНИЯ CORS В ОШИБКИ =====
+app.use((req, res, next) => {
+  const originalStatus = res.status;
+  const origin = req.headers.origin;
+  
+  res.status = function(code) {
+    res.setHeader("Access-Control-Allow-Origin", origin || "https://igrogram.vercel.app");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    return originalStatus.call(this, code);
+  };
+  
   next();
 });
 
@@ -69,10 +61,14 @@ app.use(helmet({
 }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Логирование запросов
+// Логирование
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
+});
+
+app.get("/test-cors", (req, res) => {
+  res.json({ message: "CORS works!" });
 });
 
 // ===== МАРШРУТЫ =====
@@ -128,7 +124,7 @@ async function initDatabase() {
 // ===== SOCKET.IO =====
 const io = new Server(httpServer, {
   cors: { 
-    origin: true, 
+    origin: "https://igrogram.vercel.app",
     credentials: true,
     methods: ["GET", "POST"]
   }
