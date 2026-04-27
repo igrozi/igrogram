@@ -10,7 +10,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const SOCKET_URL = 'https://a188-2001-41d0-2005-100-00-13d7.ngrok-free.app';
+const SOCKET_URL = 'https://5250-2001-41d0-2005-100-00-13d7.ngrok-free.app';
 
 const createPopParticles = (message, bubble, color) => {
   const bubbleRect = bubble.getBoundingClientRect();

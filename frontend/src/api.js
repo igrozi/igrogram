@@ -1,5 +1,16 @@
-const API_URL = 'https://a188-2001-41d0-2005-100-00-13d7.ngrok-free.app';
+const API_URL = 'https://5250-2001-41d0-2005-100-00-13d7.ngrok-free.app';
 
+// Базовые заголовки с обходом ngrok
+const getHeaders = (token) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
 
 export const api = {
   // ===== АВТОРИЗАЦИЯ =====
@@ -7,9 +18,7 @@ export const api = {
   login: async (email, password) => {
     const response = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getHeaders(),
       body: JSON.stringify({ email, password }),
     });
     
@@ -25,9 +34,7 @@ export const api = {
   register: async (userData) => {
     const response = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getHeaders(),
       body: JSON.stringify(userData),
     });
     
@@ -40,12 +47,9 @@ export const api = {
     return { success: true, ...data };
   },
 
-  // Переименовал verifyToken в verify, чтобы AuthContext мог его вызывать
   verify: async (token) => {
     const response = await fetch(`${API_URL}/api/auth/verify`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -59,10 +63,7 @@ export const api = {
   logout: async (userId, token) => {
     const response = await fetch(`${API_URL}/api/auth/logout`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
       body: JSON.stringify({ userId }),
     });
     
@@ -73,9 +74,7 @@ export const api = {
   
   getUsers: async (token) => {
     const response = await fetch(`${API_URL}/api/users`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -87,9 +86,7 @@ export const api = {
 
   getProfile: async (username, token) => {
     const response = await fetch(`${API_URL}/api/users/profile/${username}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -102,10 +99,7 @@ export const api = {
   updateProfile: async (profileData, token) => {
     const response = await fetch(`${API_URL}/api/users/profile`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
       body: JSON.stringify(profileData),
     });
     
@@ -118,9 +112,7 @@ export const api = {
 
   searchUsers: async (query, token) => {
     const response = await fetch(`${API_URL}/api/users/search?q=${encodeURIComponent(query)}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -135,10 +127,7 @@ export const api = {
   rateUser: async (raterId, ratedUserId, score, token) => {
     const response = await fetch(`${API_URL}/api/users/rate`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
       body: JSON.stringify({ raterId, ratedUserId, score }),
     });
     
@@ -147,9 +136,7 @@ export const api = {
 
   getRatingStats: async (userId, token) => {
     const response = await fetch(`${API_URL}/api/ratings/stats/${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -161,9 +148,7 @@ export const api = {
 
   getVoters: async (userId, token) => {
     const response = await fetch(`${API_URL}/api/ratings/voters/${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -177,9 +162,7 @@ export const api = {
   
   getUserPosts: async (userId, token) => {
     const response = await fetch(`${API_URL}/api/posts/user/${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -192,10 +175,7 @@ export const api = {
   createPost: async (postData, token) => {
     const response = await fetch(`${API_URL}/api/posts`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
       body: JSON.stringify(postData),
     });
     
@@ -209,10 +189,7 @@ export const api = {
   updatePost: async (postId, updateData, token) => {
     const response = await fetch(`${API_URL}/api/posts/${postId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
       body: JSON.stringify(updateData),
     });
     
@@ -226,9 +203,7 @@ export const api = {
   deletePost: async (postId, token) => {
     const response = await fetch(`${API_URL}/api/posts/${postId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -241,9 +216,7 @@ export const api = {
   likePost: async (postId, token) => {
     const response = await fetch(`${API_URL}/api/posts/${postId}/like`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -258,10 +231,7 @@ export const api = {
   addComment: async (postId, commentData, token) => {
     const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
       body: JSON.stringify(commentData),
     });
     
@@ -275,9 +245,7 @@ export const api = {
   deleteComment: async (commentId, token) => {
     const response = await fetch(`${API_URL}/api/posts/comments/${commentId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -291,9 +259,7 @@ export const api = {
   
   getMessages: async (userId, token) => {
     const response = await fetch(`${API_URL}/api/messages/${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -306,10 +272,7 @@ export const api = {
   sendMessage: async (messageData, token) => {
     const response = await fetch(`${API_URL}/api/messages`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
       body: JSON.stringify(messageData),
     });
     
@@ -323,9 +286,7 @@ export const api = {
   markMessagesAsRead: async (senderId, token) => {
     const response = await fetch(`${API_URL}/api/messages/read/${senderId}`, {
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     if (!response.ok) throw new Error('Failed to mark messages as read');
     return response.json();
@@ -334,9 +295,7 @@ export const api = {
   deleteMessage: async (messageId, token) => {
     const response = await fetch(`${API_URL}/api/messages/${messageId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -348,9 +307,7 @@ export const api = {
 
   getChats: async (token) => {
     const response = await fetch(`${API_URL}/api/messages/chats/list`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -370,6 +327,7 @@ export const api = {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true'
       },
       body: formData,
     });
@@ -386,10 +344,7 @@ export const api = {
   verifyPassword: async (userId, password, token) => {
     const response = await fetch(`${API_URL}/api/users/verify-password`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
       body: JSON.stringify({ userId, password }),
     });
     
@@ -404,9 +359,7 @@ export const api = {
   deleteAccount: async (userId, token) => {
     const response = await fetch(`${API_URL}/api/users/${userId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
     });
     
     if (!response.ok) {
@@ -421,10 +374,7 @@ export const api = {
   changePassword: async (passwordData, token) => {
     const response = await fetch(`${API_URL}/api/users/change-password`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: getHeaders(token),
       body: JSON.stringify(passwordData),
     });
     if (!response.ok) {
