@@ -10,15 +10,15 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-// ГАРАНТИРОВАННОЕ СОЗДАНИЕ ПАПОК (дубль, но не помешает)
-const uploadDirs = [
+// Создаём папки, если их нет
+const folders = [
   "uploads",
   "uploads/avatars",
   "uploads/chat-images",
   "uploads/posts",
 ];
-uploadDirs.forEach((dir) => {
-  const fullPath = path.join(__dirname, "..", dir);
+folders.forEach((folder) => {
+  const fullPath = path.join(__dirname, "..", folder);
   if (!fs.existsSync(fullPath)) {
     fs.mkdirSync(fullPath, { recursive: true });
     console.log(`📁 Created: ${fullPath}`);
@@ -41,13 +41,11 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|webp/;
-  const extname = allowedTypes.test(
-    path.extname(file.originalname).toLowerCase(),
-  );
-  const mimetype = allowedTypes.test(file.mimetype);
-  if (mimetype && extname) cb(null, true);
-  else cb(new Error("Only images are allowed"));
+  const allowed = /jpeg|jpg|png|gif|webp/;
+  const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+  const mime = allowed.test(file.mimetype);
+  if (ext && mime) cb(null, true);
+  else cb(new Error("Only images allowed"));
 };
 
 const upload = multer({
@@ -61,18 +59,23 @@ router.post("/", authenticate, upload.single("file"), (req, res) => {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
-  // Определяем подпапку (нужна для правильного URL)
-  let subfolder = "";
-  if (req.query.type === "avatar") subfolder = "avatars";
-  else if (req.query.type === "chat") subfolder = "chat-images";
-  else if (req.query.type === "post") subfolder = "posts";
+  // Определяем подпапку для чистого URL
+  let sub = "";
+  if (req.query.type === "avatar") sub = "avatars";
+  else if (req.query.type === "chat") sub = "chat-images";
+  else if (req.query.type === "post") sub = "posts";
 
-  // Протокол: если запрос пришёл через прокси (Railway), берём из заголовка
+  // Всегда HTTPS в продакшене, либо смотрим на x-forwarded-proto
   const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+  // Принудительно заменяем http на https для продакшен-домена
+  const finalProtocol =
+    protocol === "http" && process.env.NODE_ENV === "production"
+      ? "https"
+      : protocol;
   const host = req.get("host");
-  const url = `${protocol}://${host}/uploads/${subfolder ? subfolder + "/" : ""}${req.file.filename}`;
+  const url = `${finalProtocol}://${host}/uploads/${sub ? sub + "/" : ""}${req.file.filename}`;
 
-  console.log(`📎 File uploaded: ${url}`);
+  console.log(`✅ Uploaded: ${url}`);
   res.json({ url });
 });
 
