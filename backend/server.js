@@ -25,68 +25,52 @@ const __dirname = path.dirname(__filename);
 async function initDatabase() {
   try {
     const sqlPath = path.join(__dirname, "db", "init.sql");
-    const sql = fs.readFileSync(sqlPath, "utf8");
-    await pool.query(sql);
-    console.log("✅ Database tables initialized");
+    if (fs.existsSync(sqlPath)) {
+      const sql = fs.readFileSync(sqlPath, "utf8");
+      await pool.query(sql);
+      console.log("✅ Database tables initialized");
+    }
   } catch (err) {
     if (err.code === "42P07") {
-      console.log("ℹ️ Tables already exist, skipping init");
+      console.log("ℹ️ Tables already exist");
     } else {
       console.error("⚠️ DB init warning:", err.message);
     }
   }
 }
-initDatabase();
 
 const app = express();
 const httpServer = createServer(app);
 
-// ===== КРИТИЧНО: НАСТРОЙКА CORS ДЛЯ ВСЕХ ЗАПРОСОВ =====
-// Получаем разрешённые источники
-const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [
+// CORS - полная и рабочая настройка
+const allowedOrigins = [
+  "https://igrogram.vercel.app",
+  "https://igrogram-production.up.railway.app",
   "http://localhost:5173",
   "http://localhost:3000",
-  "http://localhost",
+  "http://localhost"
 ];
 
-// Добавляем ваш Vercel домен вручную, если его нет
-if (process.env.CORS_ORIGIN) {
-  allowedOrigins.push(...process.env.CORS_ORIGIN.split(","));
-} else {
-  allowedOrigins.push("https://igrogram.vercel.app");
-}
-
-// Простая и надёжная настройка CORS
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
-  // Разрешаем запросы от любых источников в списке
-  if (allowedOrigins.includes(origin) || !origin) {
-    res.header("Access-Control-Allow-Origin", origin || "*");
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
   }
-  
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   
-  // Обрабатываем preflight запросы
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
-  
   next();
 });
 
-// Базовые middleware
 app.use(express.json());
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
-}));
-
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
+// Маршруты
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/messages", messagesRoutes);
@@ -96,10 +80,14 @@ app.use("/api/ratings", ratingStatsRouter);
 
 // Health check
 app.get("/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// 404 handler
+app.get("/ping", (req, res) => {
+  res.status(200).send("pong");
+});
+
+// 404
 app.use("*", (req, res) => {
   res.status(404).json({ error: `Cannot ${req.method} ${req.originalUrl}` });
 });
@@ -112,62 +100,29 @@ app.use((err, req, res, next) => {
 
 // Socket.IO
 const io = new Server(httpServer, {
-  cors: {
-    origin: allowedOrigins,
-    credentials: true,
-  },
+  cors: { origin: allowedOrigins, credentials: true }
 });
 
 io.on("connection", (socket) => {
-  console.log("New client connected:", socket.id);
-
+  console.log("Client connected:", socket.id);
   socket.on("join", (userId) => {
-    if (userId) {
-      socket.join(`user_${userId}`);
-      console.log(`User ${userId} joined room`);
-    }
+    if (userId) socket.join(`user_${userId}`);
   });
-
   socket.on("send_message", (data) => {
     if (data.receiver_id) {
       io.to(`user_${data.receiver_id}`).emit("new_message", data);
       io.to(`user_${data.sender_id}`).emit("message_sent", data);
     }
   });
-
-  socket.on("typing", (data) => {
-    if (data.receiver_id) {
-      socket.to(`user_${data.receiver_id}`).emit("user_typing", {
-        sender_id: data.sender_id,
-        sender_name: data.sender_name,
-      });
-    }
-  });
-
-  socket.on("mark_read", (data) => {
-    if (data.sender_id) {
-      io.to(`user_${data.sender_id}`).emit("messages_read", {
-        receiver_id: data.receiver_id,
-      });
-    }
-  });
-
-  socket.on("delete_message", (data) => {
-    console.log("Delete message event:", data);
-    if (data.chatId) {
-      io.to(`user_${data.chatId}`).emit("message_deleted", {
-        messageId: data.messageId,
-      });
-    }
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id);
-  });
+  socket.on("disconnect", () => console.log("Client disconnected:", socket.id));
 });
 
+// КРИТИЧНО: правильная привязка к порту
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`📍 Health check: https://igrogram-production.up.railway.app/health`);
+  console.log(`✅ Health check: /health`);
 });
+
+// Запускаем инициализацию БД после старта сервера
+initDatabase();
