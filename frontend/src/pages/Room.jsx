@@ -311,7 +311,7 @@ const Room = () => {
   const [showMobileChatList, setShowMobileChatList] = useState(true);
 
   const inactivityTimerRef = useRef(null);
-  const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
+  const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
   const updateOnlineStatus = useCallback(
     async (isOnline) => {

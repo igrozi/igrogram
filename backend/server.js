@@ -21,6 +21,20 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const uploadDirs = [
+  "uploads",
+  "uploads/avatars",
+  "uploads/chat-images",
+  "uploads/posts",
+];
+uploadDirs.forEach((dir) => {
+  const fullPath = path.join(__dirname, dir);
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true });
+    console.log(`📁 Created: ${fullPath}`);
+  }
+});
+
 const app = express();
 const httpServer = createServer(app);
 
