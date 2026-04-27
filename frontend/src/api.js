@@ -4,7 +4,6 @@ const API_URL =
 const getHeaders = (token) => {
   const headers = {
     "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "true",
   };
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
@@ -330,7 +329,6 @@ export const api = {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
       },
       body: formData,
     });
