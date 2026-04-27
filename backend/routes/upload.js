@@ -1,8 +1,8 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
-import fs from "fs";
 import { fileURLToPath } from "url";
+import fs from "fs";
 import { authenticate } from "../middleware/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -10,11 +10,20 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-const ensureDir = (dir) => {
-  const fullPath = path.join(__dirname, dir);
-  if (!fs.existsSync(fullPath)) fs.mkdirSync(fullPath, { recursive: true });
-  return fullPath;
-};
+// ГАРАНТИРОВАННОЕ СОЗДАНИЕ ПАПОК (дубль, но не помешает)
+const uploadDirs = [
+  "uploads",
+  "uploads/avatars",
+  "uploads/chat-images",
+  "uploads/posts",
+];
+uploadDirs.forEach((dir) => {
+  const fullPath = path.join(__dirname, "..", dir);
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true });
+    console.log(`📁 Created: ${fullPath}`);
+  }
+});
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -22,7 +31,8 @@ const storage = multer.diskStorage({
     if (req.query.type === "avatar") folder = "uploads/avatars";
     else if (req.query.type === "chat") folder = "uploads/chat-images";
     else if (req.query.type === "post") folder = "uploads/posts";
-    cb(null, ensureDir(folder));
+    const fullPath = path.join(__dirname, "..", folder);
+    cb(null, fullPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -36,12 +46,8 @@ const fileFilter = (req, file, cb) => {
     path.extname(file.originalname).toLowerCase(),
   );
   const mimetype = allowedTypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only images are allowed"));
-  }
+  if (mimetype && extname) cb(null, true);
+  else cb(new Error("Only images are allowed"));
 };
 
 const upload = multer({
@@ -55,8 +61,19 @@ router.post("/", authenticate, upload.single("file"), (req, res) => {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.path.split("/").slice(1).join("/")}`;
-  res.json({ url: fileUrl });
+  // Определяем подпапку (нужна для правильного URL)
+  let subfolder = "";
+  if (req.query.type === "avatar") subfolder = "avatars";
+  else if (req.query.type === "chat") subfolder = "chat-images";
+  else if (req.query.type === "post") subfolder = "posts";
+
+  // Протокол: если запрос пришёл через прокси (Railway), берём из заголовка
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+  const host = req.get("host");
+  const url = `${protocol}://${host}/uploads/${subfolder ? subfolder + "/" : ""}${req.file.filename}`;
+
+  console.log(`📎 File uploaded: ${url}`);
+  res.json({ url });
 });
 
 export default router;
