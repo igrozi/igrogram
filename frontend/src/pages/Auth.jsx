@@ -124,16 +124,8 @@ const Auth = () => {
     }
     
     setTagStatus({ loading: true, available: null, message: "Checking..." });
+
     
-    setTimeout(() => {
-      const takenUsernames = ["admin", "user", "test", "root"];
-      const isTaken = takenUsernames.includes(username.toLowerCase());
-      if (isTaken) {
-        setTagStatus({ loading: false, available: false, message: "Taken" });
-      } else {
-        setTagStatus({ loading: false, available: true, message: "Available" });
-      }
-    }, 500);
   }, []);
 
   useEffect(() => {
