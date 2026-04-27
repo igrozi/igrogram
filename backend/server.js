@@ -24,23 +24,67 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
-// ===== СПЕЦИАЛЬНАЯ ОБРАБОТКА CORS ДЛЯ ОШИБОК =====
+// ===== CORS НАСТРОЙКА (РАБОТАЕТ ДЛЯ ВСЕХ ОТВЕТОВ, ВКЛЮЧАЯ ОШИБКИ) =====
+const allowedOrigins = [
+  "https://igrogram.vercel.app",
+  "https://igrogram-production.up.railway.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost"
+];
+
+// Основной CORS middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Устанавливаем заголовки ДО любого кода
-  res.setHeader("Access-Control-Allow-Origin", origin || "*");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  // Разрешаем запросы из разрешённых источников
+  if (allowedOrigins.includes(origin) || !origin) {
+    res.header("Access-Control-Allow-Origin", origin || "*");
+  }
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   
-  // Для preflight сразу отвечаем 200
+  // Обрабатываем preflight запросы
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
+  next();
+});
+
+// Дополнительная защита для ответов с ошибками
+app.use((req, res, next) => {
+  const originalJson = res.json;
+  const originalSend = res.send;
+  
+  res.json = function(data) {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin) || !origin) {
+      res.setHeader("Access-Control-Allow-Origin", origin || "*");
+    }
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    return originalJson.call(this, data);
+  };
+  
+  res.send = function(data) {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin) || !origin) {
+      res.setHeader("Access-Control-Allow-Origin", origin || "*");
+    }
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    return originalSend.call(this, data);
+  };
   
   next();
 });
+
+// Базовые middleware
+app.use(express.json());
+app.use(helmet({ 
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+}));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ===== МАРШРУТЫ =====
 app.use("/api/auth", authRoutes);
@@ -97,7 +141,7 @@ async function initDatabase() {
 // ===== SOCKET.IO =====
 const io = new Server(httpServer, {
   cors: { 
-    origin: true, 
+    origin: allowedOrigins, 
     credentials: true,
     methods: ["GET", "POST"]
   }
@@ -151,17 +195,13 @@ io.on("connection", (socket) => {
   });
 });
 
+// ===== ЗАПУСК СЕРВЕРА =====
 const PORT = process.env.PORT || 5000;
-
-// Явно слушаем все интерфейсы и выводим реальный порт
 httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`✅ Server listening on 0.0.0.0:${PORT}`);
-  console.log(`✅ Health check available at /health`);
+  console.log(`✅ Listening on 0.0.0.0:${PORT}`);
+  console.log(`✅ Health check: /health`);
 });
 
-// Ждём запуска сервера, потом инициализируем БД
+// Инициализация БД
 initDatabase().catch(console.error);
-
-// Экспортируем для Railway (важно!)
-export default app;
