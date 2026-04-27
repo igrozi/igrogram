@@ -24,18 +24,42 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
-// ===== CORS - ДОЛЖЕН БЫТЬ САМЫМ ПЕРВЫМ =====
+// ===== ГАРАНТИРОВАННЫЙ CORS Middleware (ДО ВСЕХ МАРШРУТОВ) =====
 app.use((req, res, next) => {
-  // Разрешаем запросы с любого источника (для теста)
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  
-  // Для preflight запросов сразу отвечаем 200
+  // Сохраняем оригинальные методы
+  const originalJson = res.json;
+  const originalSend = res.send;
+  const origin = req.headers.origin;
+
+  // Функция для установки заголовков
+  const setCorsHeaders = () => {
+    const allowedOrigin = origin || "https://igrogram.vercel.app";
+    res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  };
+
+  // Переопределяем res.json, чтобы установить заголовки перед отправкой JSON
+  res.json = function(body) {
+    setCorsHeaders();
+    return originalJson.call(this, body);
+  };
+
+  // Переопределяем res.send, чтобы установить заголовки перед отправкой
+  res.send = function(body) {
+    setCorsHeaders();
+    return originalSend.call(this, body);
+  };
+
+  // Устанавливаем заголовки для самого ответа
+  setCorsHeaders();
+
+  // Обрабатываем preflight (OPTIONS) запрос
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
+
   next();
 });
 
