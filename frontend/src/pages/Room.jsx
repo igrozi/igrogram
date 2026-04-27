@@ -396,7 +396,6 @@ const Room = () => {
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
-      console.log("Socket connected");
       newSocket.emit("join", user.user_id);
     });
 

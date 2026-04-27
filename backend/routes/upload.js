@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-// Создаём папки, если их нет
+// Гарантированное создание папок
 const folders = [
   "uploads",
   "uploads/avatars",
@@ -65,15 +65,13 @@ router.post("/", authenticate, upload.single("file"), (req, res) => {
   else if (req.query.type === "chat") sub = "chat-images";
   else if (req.query.type === "post") sub = "posts";
 
-  // Всегда HTTPS в продакшене, либо смотрим на x-forwarded-proto
-  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-  // Принудительно заменяем http на https для продакшен-домена
-  const finalProtocol =
-    protocol === "http" && process.env.NODE_ENV === "production"
-      ? "https"
-      : protocol;
+  // Принудительно HTTPS в продакшене
+  const isProd = process.env.NODE_ENV === "production";
+  const protocol = isProd
+    ? "https"
+    : req.headers["x-forwarded-proto"] || req.protocol;
   const host = req.get("host");
-  const url = `${finalProtocol}://${host}/uploads/${sub ? sub + "/" : ""}${req.file.filename}`;
+  const url = `${protocol}://${host}/uploads/${sub ? sub + "/" : ""}${req.file.filename}`;
 
   console.log(`✅ Uploaded: ${url}`);
   res.json({ url });
