@@ -24,67 +24,31 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
-// ===== CORS НАСТРОЙКА (РАБОТАЕТ ДЛЯ ВСЕХ ОТВЕТОВ, ВКЛЮЧАЯ ОШИБКИ) =====
-const allowedOrigins = [
-  "https://igrogram.vercel.app",
-  "https://igrogram-production.up.railway.app",
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "http://localhost"
-];
-
-// Основной CORS middleware
+// ===== CORS НАСТРОЙКА =====
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
-  // Разрешаем запросы из разрешённых источников
-  if (allowedOrigins.includes(origin) || !origin) {
-    res.header("Access-Control-Allow-Origin", origin || "*");
-  }
+  res.header("Access-Control-Allow-Origin", origin || "*");
   res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   
-  // Обрабатываем preflight запросы
   if (req.method === "OPTIONS") {
-    return res.status(200).end();
+    return res.sendStatus(200);
   }
   next();
 });
 
-// Дополнительная защита для ответов с ошибками
-app.use((req, res, next) => {
-  const originalJson = res.json;
-  const originalSend = res.send;
-  
-  res.json = function(data) {
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin) || !origin) {
-      res.setHeader("Access-Control-Allow-Origin", origin || "*");
-    }
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    return originalJson.call(this, data);
-  };
-  
-  res.send = function(data) {
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin) || !origin) {
-      res.setHeader("Access-Control-Allow-Origin", origin || "*");
-    }
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    return originalSend.call(this, data);
-  };
-  
-  next();
-});
-
-// Базовые middleware
 app.use(express.json());
 app.use(helmet({ 
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// ===== ЛОГИРОВАНИЕ ВСЕХ ЗАПРОСОВ =====
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 // ===== МАРШРУТЫ =====
 app.use("/api/auth", authRoutes);
@@ -126,8 +90,6 @@ async function initDatabase() {
       const sql = fs.readFileSync(sqlPath, "utf8");
       await pool.query(sql);
       console.log("✅ Database tables initialized");
-    } else {
-      console.log("ℹ️ init.sql not found, skipping");
     }
   } catch (err) {
     if (err.code === "42P07") {
@@ -140,11 +102,7 @@ async function initDatabase() {
 
 // ===== SOCKET.IO =====
 const io = new Server(httpServer, {
-  cors: { 
-    origin: allowedOrigins, 
-    credentials: true,
-    methods: ["GET", "POST"]
-  }
+  cors: { origin: true, credentials: true }
 });
 
 io.on("connection", (socket) => {
@@ -182,7 +140,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("delete_message", (data) => {
-    console.log("🗑️ Delete message event:", data);
+    console.log("🗑️ Delete message:", data.messageId);
     if (data.chatId) {
       io.to(`user_${data.chatId}`).emit("message_deleted", {
         messageId: data.messageId,
@@ -195,13 +153,11 @@ io.on("connection", (socket) => {
   });
 });
 
-// ===== ЗАПУСК СЕРВЕРА =====
+// ===== ЗАПУСК =====
 const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, "0.0.0.0", () => {
+httpServer.listen(PORT, "0.0.0.0", async () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`✅ NODE_ENV: ${process.env.NODE_ENV || "production"}`);
-  console.log(`✅ DATABASE_URL: ${process.env.DATABASE_URL ? "set" : "NOT SET"}`);
+  console.log(`✅ NODE_ENV: ${process.env.NODE_ENV || "development"}`);
+  console.log(`✅ DATABASE_URL: ${process.env.DATABASE_URL ? "SET" : "NOT SET"}`);
+  await initDatabase();
 });
-
-// Инициализация БД
-initDatabase().catch(console.error);
