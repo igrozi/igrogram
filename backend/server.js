@@ -24,28 +24,23 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
-// ===== КРИТИЧНО: CORS НАСТРОЙКА ПЕРВОЙ =====
+// ===== СПЕЦИАЛЬНАЯ ОБРАБОТКА CORS ДЛЯ ОШИБОК =====
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  // Разрешаем все источники для теста
-  res.header("Access-Control-Allow-Origin", origin || "*");
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   
-  // Обрабатываем preflight запросы
+  // Устанавливаем заголовки ДО любого кода
+  res.setHeader("Access-Control-Allow-Origin", origin || "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  
+  // Для preflight сразу отвечаем 200
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
+    return res.status(200).end();
   }
+  
   next();
 });
-
-app.use(express.json());
-app.use(helmet({ 
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
-}));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ===== МАРШРУТЫ =====
 app.use("/api/auth", authRoutes);
