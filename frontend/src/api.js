@@ -384,6 +384,23 @@ export const api = {
     }
     return response.json();
   },
+
+  checkUsername: async (username) => {
+  try {
+    const response = await fetch(`${API_URL}/api/users/check-username/${username}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    const data = await response.json();
+    return { available: data.available, message: data.message };
+  } catch (error) {
+    console.error('Username check error:', error);
+    return { available: true, message: "Available" }; // fallback
+  }
+},
 };
 
 export default api;

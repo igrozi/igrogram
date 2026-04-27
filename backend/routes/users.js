@@ -277,6 +277,27 @@ router.delete("/:userId", authenticate, async (req, res) => {
   } finally {
     client.release();
   }
+
+  
+});
+
+router.get('/check-username/:username', async (req, res) => {
+  const { username } = req.params;
+  
+  try {
+    const result = await pool.query(
+      'SELECT username FROM profiles WHERE username = $1',
+      [username.toLowerCase()]
+    );
+    
+    res.json({ 
+      available: result.rows.length === 0,
+      message: result.rows.length === 0 ? "Available" : "Username already taken"
+    });
+  } catch (error) {
+    console.error('Error checking username:', error);
+    res.status(500).json({ available: false, message: "Server error" });
+  }
 });
 
 export default router;

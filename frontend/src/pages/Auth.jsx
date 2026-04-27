@@ -22,16 +22,13 @@ const Auth = () => {
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
-      /* Отключаем анимацию смены фона */
       input:-webkit-autofill,
       input:-webkit-autofill:hover,
       input:-webkit-autofill:focus,
       input:-webkit-autofill:active {
         transition: background-color 999999s ease-in-out 0s !important;
-        /* Заменяем белый фон автозаполнения на тёмный цвет страницы */
         -webkit-box-shadow: 0 0 0 1000px #020617 inset !important;
         box-shadow: 0 0 0 1000px #020617 inset !important;
-        /* Текст делаем белым */
         -webkit-text-fill-color: #ffffff !important;
         color: #ffffff !important;
         caret-color: #ffffff !important;
@@ -72,6 +69,7 @@ const Auth = () => {
     }
   }, [data.password, isLogin]);
 
+  // Валидация email при регистрации
   useEffect(() => {
     if (!isLogin && data.email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -81,6 +79,7 @@ const Auth = () => {
     }
   }, [data.email, isLogin]);
 
+  // Валидация пароля при регистрации
   useEffect(() => {
     if (!isLogin && data.password) {
       const hasNumber = /\d/.test(data.password);
@@ -109,7 +108,9 @@ const Auth = () => {
     }
   }, [data.password, isLogin]);
 
+  // Проверка доступности username через API
   const checkUsernameAvailability = useCallback(async (username) => {
+    // Валидация на клиенте
     if (username.length < 4) {
       setTagStatus({ loading: false, available: false, message: "Min 4 chars" });
       return;
@@ -123,29 +124,32 @@ const Auth = () => {
       return;
     }
     
-     // Реальная проверка на бэкенде
-  setTagStatus({ loading: true, available: null, message: "Checking..." });
-  
-  try {
-    // Вызываем API поиска, чтобы проверить, занят ли username
-    const users = await api.searchUsers(username, null); // без токена для регистрации
-    const isTaken = users.some(u => u.username === username.toLowerCase());
+    setTagStatus({ loading: true, available: null, message: "Checking..." });
     
-    if (isTaken) {
-      setTagStatus({ loading: false, available: false, message: "Taken" });
-    } else {
+    try {
+      // Используем API для проверки username
+      const API_URL = import.meta.env.VITE_API_URL || "https://igrogram-production.up.railway.app";
+      const response = await fetch(`${API_URL}/api/users/check-username/${username}`);
+      const result = await response.json();
+      
+      if (result.available) {
+        setTagStatus({ loading: false, available: true, message: "Available" });
+      } else {
+        setTagStatus({ loading: false, available: false, message: "Already taken" });
+      }
+    } catch (error) {
+      console.error("Username check error:", error);
+      // В случае ошибки API считаем username доступным (не блокируем регистрацию)
       setTagStatus({ loading: false, available: true, message: "Available" });
     }
-  } catch (error) {
-    // Если API недоступен, просто считаем username доступным
-    console.error("Username check error:", error);
-    setTagStatus({ loading: false, available: true, message: "Available" });
-  }
-}, []);
+  }, []);
 
+  // Задержка перед проверкой username (debounce)
   useEffect(() => {
     if (!isLogin && data.username) {
-      const timeoutId = setTimeout(() => checkUsernameAvailability(data.username), 500);
+      const timeoutId = setTimeout(() => {
+        checkUsernameAvailability(data.username);
+      }, 500);
       return () => clearTimeout(timeoutId);
     } else {
       setTagStatus({ loading: false, available: null, message: "" });
