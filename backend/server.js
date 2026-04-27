@@ -32,7 +32,7 @@ const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
+  /*origin: function (origin, callback) {
     // Разрешаем запросы без origin (например, из curl)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -41,7 +41,8 @@ const corsOptions = {
       console.log(`❌ CORS blocked: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
-  },
+  },*/
+  origin: true,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
