@@ -158,9 +158,9 @@ io.on("connection", (socket) => {
 
 // ===== ЗАПУСК СЕРВЕРА (КРИТИЧНО: "0.0.0.0") =====
 const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, "0.0.0.0", async () => {
+httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`✅ Health check: /health`);
-  console.log(`✅ Ping endpoint: /ping`);
-  await initDatabase();
 });
+
+// Инициализация БД отдельно
+initDatabase().catch(console.error);
