@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'https://igrogram-production.up.railway.app';
+const API_URL = 'https://18b7-2001-41d0-2005-100-00-13d7.ngrok-free.app';
 
 export const api = {
   // ===== АВТОРИЗАЦИЯ =====
