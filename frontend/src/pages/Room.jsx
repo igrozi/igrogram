@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+
 const SOCKET_URL =
   import.meta.env.VITE_API_URL || "https://igrogram-production.up.railway.app";
 
@@ -310,69 +311,6 @@ const Room = () => {
   const [activeMobileTab, setActiveMobileTab] = useState("chats");
   const [showMobileChatList, setShowMobileChatList] = useState(true);
 
-  const inactivityTimerRef = useRef(null);
-  const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
-
-  const updateOnlineStatus = useCallback(
-    async (isOnline) => {
-      if (!user?.user_id) return; // достаточно проверить только user
-      try {
-        await api.updateProfile(
-          {
-            userId: user.user_id,
-            is_online: isOnline,
-            last_seen: new Date().toISOString(),
-          },
-          token,
-        );
-      } catch (err) {
-        console.error("Ошибка обновления статуса:", err);
-      }
-    },
-    [user, token],
-  );
-
-  const resetInactivityTimer = useCallback(() => {
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current);
-    }
-    updateOnlineStatus(true);
-    inactivityTimerRef.current = setTimeout(() => {
-      updateOnlineStatus(false);
-    }, INACTIVITY_TIMEOUT);
-  }, [updateOnlineStatus]);
-
-  useEffect(() => {
-    if (!user) return;
-    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
-    const handleActivity = () => {
-      resetInactivityTimer();
-    };
-    events.forEach((event) => {
-      window.addEventListener(event, handleActivity);
-    });
-    resetInactivityTimer();
-    return () => {
-      events.forEach((event) => {
-        window.removeEventListener(event, handleActivity);
-      });
-      if (inactivityTimerRef.current) {
-        clearTimeout(inactivityTimerRef.current);
-      }
-      updateOnlineStatus(false);
-    };
-  }, [user, resetInactivityTimer, updateOnlineStatus]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      updateOnlineStatus(false);
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [updateOnlineStatus]);
-
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
@@ -564,9 +502,6 @@ const Room = () => {
     e.preventDefault();
     if ((!messageBody.trim() && !imageFile) || !selectedContact || isSending)
       return;
-
-    await updateOnlineStatus(true);
-    resetInactivityTimer();
 
     setIsSending(true);
 
@@ -1588,7 +1523,6 @@ const Room = () => {
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden py-2">
             {searchQuery.trim() ? (
-              // ... (поиск без изменений)
               <>
                 <div className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800/30 flex items-center gap-2 sticky top-0 z-10">
                   <Globe size={16} className="text-indigo-600" />

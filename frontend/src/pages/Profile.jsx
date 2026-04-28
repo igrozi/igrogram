@@ -347,7 +347,6 @@ const Profile = () => {
       if (result.message === 'Rated successfully') {
         setMyVote(score);
         setHasVoted(true);
-        // Обновляем профиль и статистику
         await updateStats();
       }
     } catch (e) {
@@ -368,8 +367,6 @@ const Profile = () => {
       
       setProfile(prev => ({ ...prev, bio: updated.bio }));
       setEditingBio(false);
-      
-      // Обновляем данные профиля
       await updateStats();
       
     } catch (error) {
@@ -431,8 +428,6 @@ const Profile = () => {
       });
       setPostText("");
       clearImageSelection();
-      
-      // Обновляем статистику (количество постов увеличилось)
       await updateStats();
       
     } catch (error) {
@@ -452,11 +447,7 @@ const Profile = () => {
       setAllPosts(prev => {
         const updatedPosts = prev.map(post => 
           post.id === postId 
-            ? { 
-                ...post, 
-                is_pinned: updated.is_pinned, 
-                pinned_at: updated.pinned_at 
-              }
+            ? { ...post, is_pinned: updated.is_pinned, pinned_at: updated.pinned_at }
             : post
         );
         
@@ -469,8 +460,6 @@ const Profile = () => {
           return new Date(b.created_at) - new Date(a.created_at);
         });
       });
-      
-      // Обновляем статистику
       await updateStats();
       
     } catch (error) {
@@ -486,8 +475,6 @@ const Profile = () => {
     try {
       await api.deletePost(postId, token);
       setAllPosts(prev => prev.filter(p => p.id !== postId));
-      
-      // Обновляем статистику (количество постов уменьшилось)
       await updateStats();
       
     } catch (error) {
@@ -504,8 +491,6 @@ const Profile = () => {
       setAllPosts(prev => prev.map(post => 
         post.id === postId ? { ...post, likes: result.likes } : post
       ));
-      
-      // Обновляем статистику (лайки изменились)
       await updateStats();
       
     } catch (error) {
@@ -533,8 +518,6 @@ const Profile = () => {
         }
         return post;
       }));
-      
-      // Обновляем статистику (количество комментариев увеличилось)
       await updateStats();
       
     } catch (e) {
@@ -556,8 +539,6 @@ const Profile = () => {
         }
         return p;
       }));
-      
-      // Обновляем статистику (количество комментариев уменьшилось)
       await updateStats();
       
     } catch (error) {
@@ -628,13 +609,13 @@ const Profile = () => {
             }}
           />
           <div className="flex-1">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start flex-wrap gap-2">
               <div>
                 <h4 className="font-black text-lg sm:text-xl dark:text-white text-gray-900">{post.author_name}</h4>
                 <p className="text-indigo-600 dark:text-indigo-400 text-xs sm:text-sm font-bold">@{post.author_username}</p>
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
-                <span className="text-gray-500 dark:text-slate-500 text-[10px] sm:text-xs font-medium">
+                <span className="text-gray-500 dark:text-slate-500 text-[10px] sm:text-xs font-medium whitespace-nowrap">
                   {formatDateWithTime(post.created_at)}
                 </span>
                 {user && post.author_id === user.user_id && (
@@ -710,10 +691,10 @@ const Profile = () => {
               )}
               
               {user && (
-                <div className="mb-6 flex gap-3">
+                <div className="mb-6 flex flex-col sm:flex-row gap-3">
                   <img 
                     src={currentUserProfile?.avatar_url || `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`} 
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm" 
+                    className="w-10 h-10 rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
                     alt="Ваш аватар"
                     onError={(e) => {
                       e.target.onerror = null;
@@ -731,12 +712,12 @@ const Profile = () => {
                           handleAddCommentLocal();
                         } 
                       }} 
-                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-3 sm:px-4 py-2 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-[10px] sm:placeholder:text-xs text-sm" 
+                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-2.5 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-[10px] sm:placeholder:text-xs text-sm min-w-0" 
                     />
                     <button 
                       onClick={handleAddCommentLocal}
                       disabled={isAddingComment}
-                      className="px-4 sm:px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-xs sm:text-sm"
+                      className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-xs sm:text-sm flex-shrink-0"
                     >
                       {isAddingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                     </button>
@@ -751,7 +732,7 @@ const Profile = () => {
                     <div key={comment.id} className={`flex gap-2 sm:gap-3 group ${isReply ? 'ml-4 sm:ml-8' : ''}`}>
                       <img 
                         src={comment.author_avatar || `https://ui-avatars.com/api/?name=${comment.author_name}&background=4f46e5&color=fff&size=64`} 
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover shadow-sm border border-gray-200 dark:border-slate-700" 
+                        className="w-8 h-8 rounded-lg object-cover shadow-sm border border-gray-200 dark:border-slate-700 flex-shrink-0" 
                         alt={comment.author_name}
                         onError={(e) => {
                           e.target.onerror = null;
@@ -759,7 +740,7 @@ const Profile = () => {
                         }}
                       />
                       <div className="flex-1 bg-gray-100 dark:bg-slate-800/30 rounded-xl p-3 border border-gray-200 dark:border-slate-700/30 shadow-sm">
-                        <div className="flex justify-between items-start mb-1">
+                        <div className="flex justify-between items-start mb-1 flex-wrap gap-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-xs sm:text-sm dark:text-white text-gray-900">{comment.author_name}</span>
                             {comment.reply_to_author && (
@@ -769,7 +750,7 @@ const Profile = () => {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[8px] sm:text-[10px] text-gray-500 dark:text-slate-500 font-medium">
+                            <span className="text-[8px] sm:text-[10px] text-gray-500 dark:text-slate-500 font-medium whitespace-nowrap">
                               {formatDateWithTime(comment.created_at)}
                             </span>
                             {user && (comment.author_id === user.user_id || isOwnProfile) && (
@@ -788,7 +769,7 @@ const Profile = () => {
                             )}
                           </div>
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 font-medium">{comment.content}</p>
+                        <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 font-medium break-words">{comment.content}</p>
                       </div>
                     </div>
                   );

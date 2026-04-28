@@ -11,6 +11,20 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
+  // Функция для обновления статуса онлайн
+  const updateOnlineStatus = async (isOnline) => {
+    if (!user?.user_id || !token) return;
+    try {
+      await api.updateProfile({
+        userId: user.user_id,
+        is_online: isOnline,
+        last_seen: new Date().toISOString()
+      }, token);
+    } catch (err) {
+      console.error("Ошибка обновления статуса:", err);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       verifyToken();
@@ -18,6 +32,31 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
+
+  // Включаем онлайн, когда пользователь авторизован
+  useEffect(() => {
+    if (user && !loading) {
+      updateOnlineStatus(true);
+    }
+    return () => {
+      if (user && !loading) {
+        updateOnlineStatus(false);
+      }
+    };
+  }, [user, loading]);
+
+  // При закрытии вкладки/браузера
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (user) {
+        updateOnlineStatus(false);
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [user]);
 
   const verifyToken = async () => {
     try {
@@ -62,7 +101,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    if (user?.user_id) {
+    if (user?.user_id && token) {
+      await updateOnlineStatus(false);
       await api.logout(user.user_id, token);
     }
     localStorage.removeItem('token');
@@ -72,7 +112,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, profile, loading, token, login, register, logout, updateOnlineStatus }}>
       {children}
     </AuthContext.Provider>
   );
