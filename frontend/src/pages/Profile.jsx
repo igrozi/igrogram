@@ -294,7 +294,6 @@ const Profile = () => {
     }
   }, [username, navigate, user, token, fetchRatingStats]);
 
-  // Обновление статистики после действий
   const updateStats = useCallback(async () => {
     if (!profile) return;
     
@@ -611,41 +610,41 @@ const Profile = () => {
           </div>
         )}
         
-              {/* ШАПКА ПОСТА — ВСЁ В ОДНУ СТРОЧКУ, ДАТА СПРАВА */}
-      <div className="flex items-center gap-3 mb-4">
-        <img 
-          src={actualAvatar || `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`} 
-          className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
-          alt={post.author_name}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`;
-          }}
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="font-black text-base sm:text-lg dark:text-white text-gray-900 truncate">{post.author_name}</h4>
-              <p className="text-indigo-600 dark:text-indigo-400 text-xs font-bold truncate">@{post.author_username}</p>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-gray-500 dark:text-slate-500 text-[10px] font-medium whitespace-nowrap">
-                {postDate}
-              </span>
-              {user && post.author_id === user.user_id && (
-                <>
-                  <button onClick={() => handleTogglePinPost(post.id, isPinned)} className="text-yellow-500 hover:text-yellow-400 transition-colors p-1 cursor-pointer" title={isPinned ? "Открепить" : "Закрепить"}>
-                    {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
-                  </button>
-                  <button onClick={() => handleDeletePost(post.id)} className="text-red-500 hover:text-red-400 transition-colors p-1 cursor-pointer" title="Удалить пост">
-                    <Trash2 size={14} />
-                  </button>
-                </>
-              )}
+        {/* ШАПКА ПОСТА — ВСЁ В ОДНУ СТРОЧКУ, ДАТА СПРАВА */}
+        <div className="flex items-center gap-3 mb-4">
+          <img 
+            src={actualAvatar || `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`} 
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
+            alt={post.author_name}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`;
+            }}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-black text-base sm:text-lg dark:text-white text-gray-900 truncate">{post.author_name}</h4>
+                <p className="text-indigo-600 dark:text-indigo-400 text-xs font-bold truncate">@{post.author_username}</p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-gray-500 dark:text-slate-500 text-[10px] font-medium whitespace-nowrap">
+                  {postDate}
+                </span>
+                {user && post.author_id === user.user_id && (
+                  <>
+                    <button onClick={() => handleTogglePinPost(post.id, isPinned)} className="text-yellow-500 hover:text-yellow-400 transition-colors p-1 cursor-pointer" title={isPinned ? "Открепить" : "Закрепить"}>
+                      {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+                    </button>
+                    <button onClick={() => handleDeletePost(post.id)} className="text-red-500 hover:text-red-400 transition-colors p-1 cursor-pointer" title="Удалить пост">
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
         
         {post.content && <p className="dark:text-white text-gray-800 text-base sm:text-lg mb-6 whitespace-pre-wrap font-bold break-words">{post.content}</p>}
         {post.image_url && (
@@ -686,10 +685,10 @@ const Profile = () => {
             <h5 className="font-black text-sm uppercase text-gray-500 dark:text-slate-400 mb-4">Комментарии</h5>
             
             {localReplyingTo && (
-              <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 flex items-center justify-between">
+              <div className="mb-3 p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Reply size={14} className="text-indigo-600" />
-                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                  <Reply size={12} className="text-indigo-600" />
+                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
                     Ответ {localReplyingTo.author_name}
                   </span>
                 </div>
@@ -700,36 +699,38 @@ const Profile = () => {
             )}
             
             {user && (
-              <div className="mb-6 flex gap-3">
-                <img 
-                  src={currentUserProfile?.avatar_url || `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`} 
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
-                  alt="Ваш аватар"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`;
-                  }}
-                />
-                <div className="flex-1 flex gap-2">
-                  <input 
-                    type="text" 
-                    placeholder={localReplyingTo ? `ОТВЕТ ${localReplyingTo.author_name.toUpperCase()}...` : "КОММЕНТАРИЙ..."} 
-                    value={localCommentText} 
-                    onChange={(e) => setLocalCommentText(e.target.value)} 
-                    onKeyPress={(e) => { 
-                      if (e.key === 'Enter' && e.target.value.trim()) { 
-                        handleAddCommentLocal();
-                      } 
-                    }} 
-                    className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-2.5 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-[10px] text-sm min-w-0" 
+              <div className="mb-6">
+                <div className="flex gap-2">
+                  <img 
+                    src={currentUserProfile?.avatar_url || `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`} 
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
+                    alt="Ваш аватар"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`;
+                    }}
                   />
-                  <button 
-                    onClick={handleAddCommentLocal}
-                    disabled={isAddingComment}
-                    className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-xs flex-shrink-0"
-                  >
-                    {isAddingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                  </button>
+                  <div className="flex-1 flex gap-2 min-w-0">
+                    <input 
+                      type="text" 
+                      placeholder={localReplyingTo ? `ОТВЕТ ${localReplyingTo.author_name.toUpperCase()}...` : "КОММЕНТАРИЙ..."} 
+                      value={localCommentText} 
+                      onChange={(e) => setLocalCommentText(e.target.value)} 
+                      onKeyPress={(e) => { 
+                        if (e.key === 'Enter' && e.target.value.trim()) { 
+                          handleAddCommentLocal();
+                        } 
+                      }} 
+                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-3 py-2 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-[9px] sm:placeholder:text-[10px] text-sm min-w-0" 
+                    />
+                    <button 
+                      onClick={handleAddCommentLocal}
+                      disabled={isAddingComment}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-xs flex-shrink-0 whitespace-nowrap"
+                    >
+                      {isAddingComment ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
