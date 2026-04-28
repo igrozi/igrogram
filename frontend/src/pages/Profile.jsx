@@ -281,6 +281,38 @@ const Profile = () => {
     }
   }, [username, navigate, user, token, fetchRatingStats]);
 
+  // Функция для обновления статистики без полной перезагрузки
+  const updateStats = useCallback(async () => {
+    if (!profile) return;
+    
+    try {
+      // Обновляем данные профиля
+      const updatedProfile = await api.getProfile(profile.username, token);
+      setProfile(updatedProfile);
+      
+      // Обновляем рейтинг (если это свой профиль)
+      if (isOwnProfile) {
+        const { stats, total, average } = await fetchRatingStats(profile.user_id);
+        setRatingStats({ ...stats, total, average });
+      }
+      
+      // Обновляем посты
+      const posts = await api.getUserPosts(profile.user_id, token);
+      const sortedPosts = posts.sort((a, b) => {
+        if (a.is_pinned && !b.is_pinned) return -1;
+        if (!a.is_pinned && b.is_pinned) return 1;
+        if (a.is_pinned && b.is_pinned) {
+          return new Date(b.pinned_at) - new Date(a.pinned_at);
+        }
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+      setAllPosts(sortedPosts);
+      
+    } catch (error) {
+      console.error("Error updating stats:", error);
+    }
+  }, [profile, token, isOwnProfile, fetchRatingStats]);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -315,14 +347,14 @@ const Profile = () => {
       if (result.message === 'Rated successfully') {
         setMyVote(score);
         setHasVoted(true);
-        const updatedProfile = await api.getProfile(profile.username, token);
-        setProfile(updatedProfile);
+        // Обновляем профиль и статистику
+        await updateStats();
       }
     } catch (e) {
       console.error(e);
       alert("Не удалось сохранить оценку.");
     }
-  }, [isOwnProfile, user, profile, hasVoted, token]);
+  }, [isOwnProfile, user, profile, hasVoted, token, updateStats]);
 
   const handleUpdateBio = async () => {
     if (!isOwnProfile || !profile || isUpdatingBio) return;
@@ -336,8 +368,9 @@ const Profile = () => {
       
       setProfile(prev => ({ ...prev, bio: updated.bio }));
       setEditingBio(false);
-
-      await fetchProfileData();
+      
+      // Обновляем данные профиля
+      await updateStats();
       
     } catch (error) {
       alert("Ошибка сохранения биографии.");
@@ -398,6 +431,10 @@ const Profile = () => {
       });
       setPostText("");
       clearImageSelection();
+      
+      // Обновляем статистику (количество постов увеличилось)
+      await updateStats();
+      
     } catch (error) {
       alert("Не удалось опубликовать запись.");
       console.error("Ошибка при создании поста:", error);
@@ -432,11 +469,15 @@ const Profile = () => {
           return new Date(b.created_at) - new Date(a.created_at);
         });
       });
+      
+      // Обновляем статистику
+      await updateStats();
+      
     } catch (error) {
       console.error("Ошибка при закреплении/откреплении поста:", error);
       alert("Не удалось изменить статус поста.");
     }
-  }, [isOwnProfile, token]);
+  }, [isOwnProfile, token, updateStats]);
 
   const handleDeletePost = useCallback(async (postId) => {
     if (!user || !profile) return;
@@ -445,11 +486,15 @@ const Profile = () => {
     try {
       await api.deletePost(postId, token);
       setAllPosts(prev => prev.filter(p => p.id !== postId));
+      
+      // Обновляем статистику (количество постов уменьшилось)
+      await updateStats();
+      
     } catch (error) {
       alert("Сбой при удалении.");
       console.error("Ошибка при удалении поста:", error);
     }
-  }, [user, profile, token]);
+  }, [user, profile, token, updateStats]);
 
   const handleLikePost = useCallback(async (postId, currentLikes = []) => {
     if (!user) return;
@@ -459,10 +504,14 @@ const Profile = () => {
       setAllPosts(prev => prev.map(post => 
         post.id === postId ? { ...post, likes: result.likes } : post
       ));
+      
+      // Обновляем статистику (лайки изменились)
+      await updateStats();
+      
     } catch (error) {
       console.error("Ошибка при обновлении лайков:", error);
     }
-  }, [user, token]);
+  }, [user, token, updateStats]);
 
   const handleAddComment = useCallback(async (postId, commentText, replyToComment = null) => {
     if (!user || !commentText.trim() || !currentUserProfile) return;
@@ -484,11 +533,15 @@ const Profile = () => {
         }
         return post;
       }));
+      
+      // Обновляем статистику (количество комментариев увеличилось)
+      await updateStats();
+      
     } catch (e) {
       console.error("Ошибка при добавлении комментария:", e);
       alert("Не удалось отправить комментарий.");
     }
-  }, [user, currentUserProfile, token]);
+  }, [user, currentUserProfile, token, updateStats]);
 
   const handleDeleteComment = useCallback(async (postId, commentId) => {
     if (!user) return;
@@ -503,11 +556,15 @@ const Profile = () => {
         }
         return p;
       }));
+      
+      // Обновляем статистику (количество комментариев уменьшилось)
+      await updateStats();
+      
     } catch (error) {
       console.error(error);
       alert("Не удалось удалить комментарий.");
     }
-  }, [user, token]);
+  }, [user, token, updateStats]);
 
   const RatingStars = ({ vote, onRate, disabled }) => {
     return (
