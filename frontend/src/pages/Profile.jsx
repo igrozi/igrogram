@@ -611,37 +611,41 @@ const Profile = () => {
           </div>
         )}
         
-        {/* ШАПКА ПОСТА — ВСЁ В ОДНУ СТРОЧКУ */}
-        <div className="flex items-center gap-3 mb-4">
-          <img 
-            src={actualAvatar || `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`} 
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
-            alt={post.author_name}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`;
-            }}
-          />
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              {/* ШАПКА ПОСТА — ВСЁ В ОДНУ СТРОЧКУ, ДАТА СПРАВА */}
+      <div className="flex items-center gap-3 mb-4">
+        <img 
+          src={actualAvatar || `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`} 
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
+          alt={post.author_name}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`;
+          }}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
               <h4 className="font-black text-base sm:text-lg dark:text-white text-gray-900 truncate">{post.author_name}</h4>
               <p className="text-indigo-600 dark:text-indigo-400 text-xs font-bold truncate">@{post.author_username}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
               <span className="text-gray-500 dark:text-slate-500 text-[10px] font-medium whitespace-nowrap">
                 {postDate}
               </span>
               {user && post.author_id === user.user_id && (
-                <div className="flex items-center gap-1 ml-auto">
+                <>
                   <button onClick={() => handleTogglePinPost(post.id, isPinned)} className="text-yellow-500 hover:text-yellow-400 transition-colors p-1 cursor-pointer" title={isPinned ? "Открепить" : "Закрепить"}>
                     {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
                   </button>
                   <button onClick={() => handleDeletePost(post.id)} className="text-red-500 hover:text-red-400 transition-colors p-1 cursor-pointer" title="Удалить пост">
                     <Trash2 size={14} />
                   </button>
-                </div>
+                </>
               )}
             </div>
           </div>
         </div>
+      </div>
         
         {post.content && <p className="dark:text-white text-gray-800 text-base sm:text-lg mb-6 whitespace-pre-wrap font-bold break-words">{post.content}</p>}
         {post.image_url && (
