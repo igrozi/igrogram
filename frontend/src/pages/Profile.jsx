@@ -299,17 +299,14 @@ const Profile = () => {
     if (!profile) return;
     
     try {
-      // Обновляем данные профиля
       const updatedProfile = await api.getProfile(profile.username, token);
       setProfile(updatedProfile);
       
-      // Обновляем рейтинг (только для своего профиля)
       if (isOwnProfile) {
         const { stats, total, average } = await fetchRatingStats(profile.user_id);
         setRatingStats({ ...stats, total, average });
       }
       
-      // Обновляем посты
       const posts = await api.getUserPosts(profile.user_id, token);
       const sortedPosts = posts.sort((a, b) => {
         if (a.is_pinned && !b.is_pinned) return -1;
@@ -603,7 +600,6 @@ const Profile = () => {
       setIsAddingComment(false);
     };
     
-    // Выбираем формат даты в зависимости от устройства
     const postDate = isMobile ? formatDateCompact(post.created_at) : formatDateWithTime(post.created_at);
     
     return (
@@ -614,10 +610,12 @@ const Profile = () => {
             <span className="text-xs font-black uppercase tracking-wider">Закреплено</span>
           </div>
         )}
-        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-4">
+        
+        {/* ШАПКА ПОСТА — ВСЁ В ОДНУ СТРОЧКУ */}
+        <div className="flex items-center gap-3 mb-4">
           <img 
             src={actualAvatar || `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`} 
-            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
             alt={post.author_name}
             onError={(e) => {
               e.target.onerror = null;
@@ -625,26 +623,22 @@ const Profile = () => {
             }}
           />
           <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap justify-between items-start gap-2">
-              <div className="min-w-0">
-                <h4 className="font-black text-lg sm:text-xl dark:text-white text-gray-900 break-words">{post.author_name}</h4>
-                <p className="text-indigo-600 dark:text-indigo-400 text-xs sm:text-sm font-bold break-words">@{post.author_username}</p>
-              </div>
-              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                <span className="text-gray-500 dark:text-slate-500 text-[10px] sm:text-xs font-medium whitespace-nowrap">
-                  {postDate}
-                </span>
-                {user && post.author_id === user.user_id && (
-                  <>
-                    <button onClick={() => handleTogglePinPost(post.id, isPinned)} className="text-yellow-500 hover:text-yellow-400 transition-colors p-1 cursor-pointer" title={isPinned ? "Открепить" : "Закрепить"}>
-                      {isPinned ? <PinOff size={16} /> : <Pin size={16} />}
-                    </button>
-                    <button onClick={() => handleDeletePost(post.id)} className="text-red-500 hover:text-red-400 transition-colors p-1 cursor-pointer" title="Удалить пост">
-                      <Trash2 size={16} />
-                    </button>
-                  </>
-                )}
-              </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h4 className="font-black text-base sm:text-lg dark:text-white text-gray-900 truncate">{post.author_name}</h4>
+              <p className="text-indigo-600 dark:text-indigo-400 text-xs font-bold truncate">@{post.author_username}</p>
+              <span className="text-gray-500 dark:text-slate-500 text-[10px] font-medium whitespace-nowrap">
+                {postDate}
+              </span>
+              {user && post.author_id === user.user_id && (
+                <div className="flex items-center gap-1 ml-auto">
+                  <button onClick={() => handleTogglePinPost(post.id, isPinned)} className="text-yellow-500 hover:text-yellow-400 transition-colors p-1 cursor-pointer" title={isPinned ? "Открепить" : "Закрепить"}>
+                    {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+                  </button>
+                  <button onClick={() => handleDeletePost(post.id)} className="text-red-500 hover:text-red-400 transition-colors p-1 cursor-pointer" title="Удалить пост">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -670,135 +664,128 @@ const Profile = () => {
             onClick={() => handleLikePost(post.id, post.likes || [])} 
             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all font-bold cursor-pointer text-sm ${post.likes?.includes(user?.user_id) ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-slate-800'}`}
           >
-            <Heart size={20} fill={post.likes?.includes(user?.user_id) ? "#ef4444" : "none"} className={post.likes?.includes(user?.user_id) ? "text-red-500" : "text-gray-400 dark:text-slate-400"} />
+            <Heart size={18} fill={post.likes?.includes(user?.user_id) ? "#ef4444" : "none"} className={post.likes?.includes(user?.user_id) ? "text-red-500" : "text-gray-400 dark:text-slate-400"} />
             <span>{(post.likes || []).length}</span>
           </button>
           <button 
             onClick={() => setShowComments(prev => ({...prev, [post.id]: !prev[post.id]}))} 
             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all font-bold cursor-pointer text-sm ${isCommentsOpen ? 'bg-blue-500/10 text-blue-500 dark:text-blue-400 hover:bg-blue-500/20 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-blue-500 hover:bg-gray-200 dark:hover:bg-slate-800'}`}
           >
-            <MessageSquare size={20} />
+            <MessageSquare size={18} />
             <span>{post.comments_count || 0}</span>
           </button>
         </div>
         
-        <AnimatePresence mode="wait">
-          {isCommentsOpen && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="mt-6 pt-6 border-t border-gray-200 dark:border-slate-700/50 overflow-hidden"
-            >
-              <h5 className="font-black text-sm uppercase text-gray-500 dark:text-slate-400 mb-4">Комментарии</h5>
-              
-              {localReplyingTo && (
-                <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Reply size={14} className="text-indigo-600" />
-                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                      Ответ {localReplyingTo.author_name}
-                    </span>
-                  </div>
-                  <button onClick={() => setLocalReplyingTo(null)} className="text-gray-500 hover:text-gray-700 cursor-pointer">
-                    <X size={14} />
+        {/* КОММЕНТАРИИ — БЕЗ АНИМАЦИИ, ЧТОБЫ НЕ ДЁРГАЛИСЬ */}
+        {isCommentsOpen && (
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-slate-700/50">
+            <h5 className="font-black text-sm uppercase text-gray-500 dark:text-slate-400 mb-4">Комментарии</h5>
+            
+            {localReplyingTo && (
+              <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Reply size={14} className="text-indigo-600" />
+                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                    Ответ {localReplyingTo.author_name}
+                  </span>
+                </div>
+                <button onClick={() => setLocalReplyingTo(null)} className="text-gray-500 hover:text-gray-700 cursor-pointer">
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+            
+            {user && (
+              <div className="mb-6 flex gap-3">
+                <img 
+                  src={currentUserProfile?.avatar_url || `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`} 
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
+                  alt="Ваш аватар"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`;
+                  }}
+                />
+                <div className="flex-1 flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder={localReplyingTo ? `ОТВЕТ ${localReplyingTo.author_name.toUpperCase()}...` : "КОММЕНТАРИЙ..."} 
+                    value={localCommentText} 
+                    onChange={(e) => setLocalCommentText(e.target.value)} 
+                    onKeyPress={(e) => { 
+                      if (e.key === 'Enter' && e.target.value.trim()) { 
+                        handleAddCommentLocal();
+                      } 
+                    }} 
+                    className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-2.5 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-[10px] text-sm min-w-0" 
+                  />
+                  <button 
+                    onClick={handleAddCommentLocal}
+                    disabled={isAddingComment}
+                    className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-xs flex-shrink-0"
+                  >
+                    {isAddingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                   </button>
                 </div>
-              )}
-              
-              {user && (
-                <div className="mb-6 flex gap-3">
-                  <img 
-                    src={currentUserProfile?.avatar_url || `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`} 
-                    className="w-10 h-10 rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
-                    alt="Ваш аватар"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`;
-                    }}
-                  />
-                  <div className="flex-1 flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder={localReplyingTo ? `ОТВЕТ ${localReplyingTo.author_name.toUpperCase()}...` : "КОММЕНТАРИЙ..."} 
-                      value={localCommentText} 
-                      onChange={(e) => setLocalCommentText(e.target.value)} 
-                      onKeyPress={(e) => { 
-                        if (e.key === 'Enter' && e.target.value.trim()) { 
-                          handleAddCommentLocal();
-                        } 
-                      }} 
-                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-2.5 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-[10px] text-sm min-w-0" 
-                    />
-                    <button 
-                      onClick={handleAddCommentLocal}
-                      disabled={isAddingComment}
-                      className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-xs flex-shrink-0"
-                    >
-                      {isAddingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar pr-2">
-                {(post.comments || []).map(comment => {
-                  const isReply = comment.reply_to;
-                  const commentDate = isMobile ? formatDateCompact(comment.created_at) : formatDateWithTime(comment.created_at);
-                  return (
-                    <div key={comment.id} className={`flex gap-2 sm:gap-3 group ${isReply ? 'ml-4 sm:ml-8' : ''}`}>
-                      <img 
-                        src={comment.author_avatar || `https://ui-avatars.com/api/?name=${comment.author_name}&background=4f46e5&color=fff&size=64`} 
-                        className="w-8 h-8 rounded-lg object-cover shadow-sm border border-gray-200 dark:border-slate-700 flex-shrink-0" 
-                        alt={comment.author_name}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `https://ui-avatars.com/api/?name=${comment.author_name}&background=4f46e5&color=fff&size=64`;
-                        }}
-                      />
-                      <div className="flex-1 bg-gray-100 dark:bg-slate-800/30 rounded-xl p-3 border border-gray-200 dark:border-slate-700/30 shadow-sm">
-                        <div className="flex flex-wrap justify-between items-start mb-1 gap-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-xs sm:text-sm dark:text-white text-gray-900">{comment.author_name}</span>
-                            {comment.reply_to_author && (
-                              <span className="text-[10px] sm:text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1">
-                                <Reply size={10} /> {comment.reply_to_author}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[8px] sm:text-[10px] text-gray-500 dark:text-slate-500 font-medium whitespace-nowrap">
-                              {commentDate}
-                            </span>
-                            {user && (comment.author_id === user.user_id || isOwnProfile) && (
-                              <button onClick={() => handleDeleteComment(post.id, comment.id)} className="text-gray-400 dark:text-slate-500 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer" title="Удалить комментарий">
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                            {user && comment.author_id !== user.user_id && (
-                              <button 
-                                onClick={() => setLocalReplyingTo(comment)} 
-                                className="text-gray-400 dark:text-slate-500 hover:text-indigo-500 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
-                                title="Ответить"
-                              >
-                                <Reply size={14} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 font-medium break-words">{comment.content}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-                {(post.comments || []).length === 0 && (
-                  <p className="text-center text-gray-500 dark:text-slate-500 text-sm py-4 font-bold">Пока нет комментариев. Будьте первым!</p>
-                )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+            
+            <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+              {(post.comments || []).map(comment => {
+                const isReply = comment.reply_to;
+                const commentDate = isMobile ? formatDateCompact(comment.created_at) : formatDateWithTime(comment.created_at);
+                return (
+                  <div key={comment.id} className={`flex gap-2 sm:gap-3 group ${isReply ? 'ml-4 sm:ml-8' : ''}`}>
+                    <img 
+                      src={comment.author_avatar || `https://ui-avatars.com/api/?name=${comment.author_name}&background=4f46e5&color=fff&size=64`} 
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover shadow-sm border border-gray-200 dark:border-slate-700 flex-shrink-0" 
+                      alt={comment.author_name}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://ui-avatars.com/api/?name=${comment.author_name}&background=4f46e5&color=fff&size=64`;
+                      }}
+                    />
+                    <div className="flex-1 bg-gray-100 dark:bg-slate-800/30 rounded-xl p-3 border border-gray-200 dark:border-slate-700/30 shadow-sm">
+                      <div className="flex flex-wrap justify-between items-start mb-1 gap-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-xs sm:text-sm dark:text-white text-gray-900">{comment.author_name}</span>
+                          {comment.reply_to_author && (
+                            <span className="text-[10px] sm:text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1">
+                              <Reply size={10} /> {comment.reply_to_author}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[8px] sm:text-[10px] text-gray-500 dark:text-slate-500 font-medium whitespace-nowrap">
+                            {commentDate}
+                          </span>
+                          {user && (comment.author_id === user.user_id || isOwnProfile) && (
+                            <button onClick={() => handleDeleteComment(post.id, comment.id)} className="text-gray-400 dark:text-slate-500 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer" title="Удалить комментарий">
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                          {user && comment.author_id !== user.user_id && (
+                            <button 
+                              onClick={() => setLocalReplyingTo(comment)} 
+                              className="text-gray-400 dark:text-slate-500 hover:text-indigo-500 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+                              title="Ответить"
+                            >
+                              <Reply size={12} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 font-medium break-words">{comment.content}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              {(post.comments || []).length === 0 && (
+                <p className="text-center text-gray-500 dark:text-slate-500 text-sm py-4 font-bold">Пока нет комментариев. Будьте первым!</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
