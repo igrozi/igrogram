@@ -756,7 +756,7 @@ const Room = () => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="fixed z-50 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border-2 border-gray-200 dark:border-slate-700 overflow-hidden min-w-[160px]"
+        className="fixed z-50 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border-2 border-gray-300 dark:border-slate-700 overflow-hidden min-w-[160px]"
         style={{ position: "fixed", left: x, top: y }}
       >
         <button
@@ -812,7 +812,7 @@ const Room = () => {
         </div>
 
         {(!selectedContact || showMobileChatList) && (
-          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800 px-4 py-3 shrink-0 relative z-20">
+          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-gray-300 dark:border-slate-800 px-4 py-3 shrink-0 relative z-20">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/30">
                 <Zap size={22} className="text-white fill-current" />
@@ -827,7 +827,7 @@ const Room = () => {
         <div className="flex-1 flex flex-col relative z-20 overflow-hidden">
           {activeMobileTab === "chats" && showMobileChatList && (
             <div className="flex-1 flex flex-col bg-white/90 dark:bg-slate-900/90 backdrop-blur-md overflow-hidden">
-              <div className="p-4 border-b border-gray-200 dark:border-slate-800 shrink-0">
+              <div className="p-4 border-b border-gray-300 dark:border-slate-800 shrink-0">
                 <div className="relative">
                   {isSearching ? (
                     <Loader2
@@ -845,7 +845,7 @@ const Room = () => {
                     placeholder="ПОИСК ПОЛЬЗОВАТЕЛЕЙ..."
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-gray-100 dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 outline-none focus:border-indigo-500 text-sm font-black tracking-wide"
+                    className="w-full pl-11 pr-4 py-3 bg-gray-100 dark:bg-slate-800 rounded-xl border-2 border-gray-300 dark:border-slate-700 outline-none focus:border-indigo-500 text-sm font-black tracking-wide"
                   />
                 </div>
               </div>
@@ -866,7 +866,7 @@ const Room = () => {
                       <div
                         key={contact.id}
                         onClick={() => startChatWithUser(contact)}
-                        className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800"
+                        className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 border-b border-gray-200 dark:border-slate-700"
                       >
                         <div className="relative shrink-0">
                           <img
@@ -874,7 +874,7 @@ const Room = () => {
                               contact.avatar_url ||
                               `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`
                             }
-                            className="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
+                            className="w-12 h-12 rounded-xl object-cover border-2 border-gray-300 dark:border-slate-700"
                             alt=""
                           />
                           {checkIsOnline(contact) && (
@@ -900,7 +900,7 @@ const Room = () => {
                   </>
                 ) : (
                   <>
-                    <div className="px-4 py-2 bg-gray-100 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700">
+                    <div className="px-4 py-2 bg-gray-100 dark:bg-slate-800/50 border-b border-gray-300 dark:border-slate-700">
                       <MessageCircle
                         size={14}
                         className="inline text-indigo-600 mr-2"
@@ -930,7 +930,7 @@ const Room = () => {
                         <div
                           key={contact.id}
                           onClick={() => startChatWithUser(contact)}
-                          className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800"
+                          className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 border-b border-gray-200 dark:border-slate-700"
                         >
                           <div className="relative shrink-0">
                             <img
@@ -938,7 +938,7 @@ const Room = () => {
                                 contact.avatar_url ||
                                 `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`
                               }
-                              className="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
+                              className="w-12 h-12 rounded-xl object-cover border-2 border-gray-300 dark:border-slate-700"
                               alt=""
                             />
                             {isUserOnline && (
@@ -1005,7 +1005,7 @@ const Room = () => {
 
           {activeMobileTab === "contacts" && (
             <div className="flex-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md overflow-y-auto overflow-x-hidden">
-              <div className="px-4 py-3 bg-gray-100 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700">
+              <div className="px-4 py-3 bg-gray-100 dark:bg-slate-800/50 border-b border-gray-300 dark:border-slate-700">
                 <Users size={14} className="inline text-indigo-600 mr-2" />
                 <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   ВСЕ КОНТАКТЫ •{" "}
@@ -1021,7 +1021,7 @@ const Room = () => {
                       startChatWithUser(contact);
                       setActiveMobileTab("chats");
                     }}
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
+                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 border-b border-gray-200 dark:border-slate-700"
                   >
                     <div className="relative">
                       <img
@@ -1029,7 +1029,7 @@ const Room = () => {
                           contact.avatar_url ||
                           `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`
                         }
-                        className="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
+                        className="w-12 h-12 rounded-xl object-cover border-2 border-gray-300 dark:border-slate-700"
                         alt=""
                       />
                       {checkIsOnline(contact) && (
@@ -1053,7 +1053,7 @@ const Room = () => {
             activeMobileTab === "chats" &&
             !showMobileChatList && (
               <div className="flex-1 flex flex-col bg-white/50 dark:bg-slate-900/50 overflow-hidden">
-                <div className="h-14 flex items-center px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-slate-800 shrink-0">
+                <div className="h-14 flex items-center px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-300 dark:border-slate-800 shrink-0">
                   <button
                     onClick={() => {
                       setShowMobileChatList(true);
@@ -1116,17 +1116,17 @@ const Room = () => {
                         >
                           <div
                             id={`bubble-${msg.id}`}
-                            className={`relative max-w-[85%] shadow-lg transition-all overflow-hidden bubble-wrapper ${
+                            className={`relative max-w-[85%] shadow-md transition-all overflow-hidden bubble-wrapper ${
                               isMe
-                                ? "bg-indigo-600 text-white rounded-2xl rounded-tr-md"
-                                : "bg-white border border-gray-200 text-gray-900 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 rounded-2xl rounded-tl-md"
+                                ? "bg-indigo-600 text-white rounded-2xl rounded-tr-md shadow-indigo-500/30"
+                                : "bg-white border-2 border-gray-300 text-gray-900 dark:bg-slate-800 dark:border-slate-600 dark:text-gray-100 rounded-2xl rounded-tl-md"
                             }`}
                             style={{ borderRadius: "16px" }}
                           >
                             <div className="message-content relative z-0">
                               {msg.reply_to && (
                                 <div
-                                  className={`px-3 pt-1.5 pb-1 text-[9px] border-b ${isMe ? "border-indigo-500" : "border-gray-200 dark:border-slate-700"}`}
+                                  className={`px-3 pt-1.5 pb-1 text-[9px] border-b ${isMe ? "border-indigo-500" : "border-gray-300 dark:border-slate-700"}`}
                                 >
                                   <div className="flex items-center gap-1 mb-0.5">
                                     <Reply
@@ -1203,7 +1203,7 @@ const Room = () => {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="shrink-0 p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-gray-200 dark:border-slate-800">
+                <div className="shrink-0 p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-gray-300 dark:border-slate-800">
                   <AnimatePresence>
                     {replyingTo && (
                       <motion.div
@@ -1267,7 +1267,7 @@ const Room = () => {
                     onSubmit={handleSendMessage}
                     className="flex items-end gap-2"
                   >
-                    <div className="flex-1 bg-gray-100 dark:bg-slate-800 rounded-2xl flex items-center gap-2 px-3 py-2">
+                    <div className="flex-1 bg-gray-100 dark:bg-slate-800 rounded-2xl flex items-center gap-2 px-3 py-2 border-2 border-gray-300 dark:border-slate-700 focus-within:border-indigo-500">
                       <input
                         type="file"
                         ref={fileInputRef}
@@ -1323,7 +1323,7 @@ const Room = () => {
                 <motion.div
                   animate={{ rotate: [0, 5, 0, -5, 0], scale: [1, 1.05, 1] }}
                   transition={{ duration: 6, repeat: Infinity }}
-                  className="w-32 h-32 bg-white dark:bg-slate-800 rounded-[40px] flex items-center justify-center mb-4 shadow-2xl border-4 border-gray-200 dark:border-slate-700"
+                  className="w-32 h-32 bg-white dark:bg-slate-800 rounded-[40px] flex items-center justify-center mb-4 shadow-2xl border-4 border-gray-300 dark:border-slate-700"
                 >
                   <MessagesSquare
                     size={44}
@@ -1347,7 +1347,7 @@ const Room = () => {
         </div>
 
         <div
-          className="shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-gray-200 dark:border-slate-800 flex items-center justify-around py-2 relative z-50"
+          className="shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-gray-300 dark:border-slate-800 flex items-center justify-around py-2 relative z-50"
           style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
         >
           {mobileBottomTabs.map((tab) => {
@@ -1389,7 +1389,7 @@ const Room = () => {
   // ==================== ДЕСКТОПНАЯ ВЕРСИЯ ====================
   return (
     <div
-      className={`flex h-screen overflow-hidden ${darkMode ? "dark bg-[#020617]" : "bg-gray-100"}`}
+      className={`flex h-screen overflow-hidden ${darkMode ? "dark bg-[#020617]" : "bg-gray-50"}`}
     >
       <style>{BURST_ANIMATION_CSS}</style>
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -1402,11 +1402,11 @@ const Room = () => {
       </div>
 
       <motion.div
-        className="h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-gray-200 dark:border-slate-800 flex flex-col shadow-2xl z-30 shrink-0"
+        className="h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-gray-300 dark:border-slate-800 flex flex-col shadow-2xl z-30 shrink-0"
         animate={{ width: isSidebarExpanded ? 260 : 80 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        <div className="p-4 border-b border-gray-200 dark:border-slate-800">
+        <div className="p-4 border-b border-gray-300 dark:border-slate-800">
           <div
             onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
             className={`flex items-center gap-3 cursor-pointer group ${!isSidebarExpanded ? "justify-center" : ""}`}
@@ -1437,7 +1437,7 @@ const Room = () => {
                 whileHover={{ scale: 1.05, x: 5 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={item.action}
-                className="w-full flex items-center gap-3 rounded-xl transition-all cursor-pointer text-gray-700 dark:text-gray-300"
+                className="w-full flex items-center gap-3 rounded-xl transition-all cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800"
                 style={{
                   justifyContent: isSidebarExpanded ? "flex-start" : "center",
                   paddingLeft: isSidebarExpanded ? "18px" : "0px",
@@ -1468,7 +1468,7 @@ const Room = () => {
             whileHover={{ scale: 1.05, x: 5 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleLogOut}
-            className="w-full flex items-center gap-3 rounded-xl transition-all cursor-pointer text-red-500"
+            className="w-full flex items-center gap-3 rounded-xl transition-all cursor-pointer text-red-500 hover:bg-red-500/10"
             style={{
               justifyContent: isSidebarExpanded ? "flex-start" : "center",
               paddingLeft: isSidebarExpanded ? "18px" : "0px",
@@ -1495,10 +1495,10 @@ const Room = () => {
 
       <div className="flex-1 flex overflow-hidden relative z-20">
         <div
-          className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-r border-gray-200 dark:border-slate-800 flex flex-col shrink-0 h-full"
+          className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-r border-gray-300 dark:border-slate-800 flex flex-col shrink-0 h-full"
           style={{ width: "400px", minWidth: "400px" }}
         >
-          <div className="p-4 border-b border-gray-200 dark:border-slate-800">
+          <div className="p-4 border-b border-gray-300 dark:border-slate-800">
             <div className="relative">
               {isSearching ? (
                 <Loader2
@@ -1516,7 +1516,7 @@ const Room = () => {
                 placeholder="ПОИСК ПОЛЬЗОВАТЕЛЕЙ..."
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-gray-100 dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 outline-none focus:border-indigo-500 text-base font-black tracking-wide"
+                className="w-full pl-12 pr-4 py-4 bg-gray-100 dark:bg-slate-800 rounded-xl border-2 border-gray-300 dark:border-slate-700 outline-none focus:border-indigo-500 text-base font-black tracking-wide"
               />
             </div>
           </div>
@@ -1534,9 +1534,9 @@ const Room = () => {
                   <div
                     key={contact.id}
                     onClick={() => startChatWithUser(contact)}
-                    className={`flex items-center gap-4 px-4 py-4 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 ${
+                    className={`flex items-center gap-4 px-4 py-4 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 border-b border-gray-200 dark:border-slate-700 ${
                       selectedContact?.user_id === contact.user_id
-                        ? "bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500"
+                        ? "bg-indigo-100 dark:bg-indigo-900/30 border-l-4 border-indigo-500"
                         : ""
                     }`}
                   >
@@ -1546,7 +1546,7 @@ const Room = () => {
                           contact.avatar_url ||
                           `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`
                         }
-                        className="w-14 h-14 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
+                        className="w-14 h-14 rounded-xl object-cover border-2 border-gray-300 dark:border-slate-700"
                         alt=""
                         onError={(e) => {
                           e.target.onerror = null;
@@ -1576,7 +1576,7 @@ const Room = () => {
               </>
             ) : (
               <>
-                <div className="px-4 py-3 bg-gray-100 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 flex items-center gap-2 sticky top-0 z-10">
+                <div className="px-4 py-3 bg-gray-100 dark:bg-slate-800/50 border-b border-gray-300 dark:border-slate-700 flex items-center gap-2 sticky top-0 z-10">
                   <MessageCircle size={16} className="text-indigo-600" />
                   <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     ДИАЛОГИ • {recentChats.length}
@@ -1616,9 +1616,9 @@ const Room = () => {
                           setReplyingTo(null);
                           markMessagesAsRead(contact.user_id);
                         }}
-                        className={`flex items-center gap-4 px-4 py-4 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 ${
+                        className={`flex items-center gap-4 px-4 py-4 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-slate-800 border-b border-gray-200 dark:border-slate-700 ${
                           selectedContact?.user_id === contact.user_id
-                            ? "bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500"
+                            ? "bg-indigo-100 dark:bg-indigo-900/30 border-l-4 border-indigo-500"
                             : ""
                         }`}
                       >
@@ -1628,7 +1628,7 @@ const Room = () => {
                               contact.avatar_url ||
                               `https://ui-avatars.com/api/?name=${contact.name}&background=4f46e5&color=fff&size=128`
                             }
-                            className="w-14 h-14 rounded-xl object-cover border border-gray-200 dark:border-slate-700"
+                            className="w-14 h-14 rounded-xl object-cover border-2 border-gray-300 dark:border-slate-700"
                             alt=""
                             onError={(e) => {
                               e.target.onerror = null;
@@ -1700,7 +1700,7 @@ const Room = () => {
         <div className="flex-1 flex flex-col bg-white/50 dark:bg-slate-900/50 h-full overflow-hidden">
           {selectedContact ? (
             <>
-              <div className="h-20 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-slate-800 shadow-sm shrink-0">
+              <div className="h-20 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-300 dark:border-slate-800 shadow-sm shrink-0">
                 <div
                   className="flex items-center gap-4 cursor-pointer"
                   onClick={() =>
@@ -1762,17 +1762,17 @@ const Room = () => {
                       >
                         <div
                           id={`bubble-${msg.id}`}
-                          className={`relative max-w-[75%] shadow-lg transition-all overflow-hidden bubble-wrapper ${
+                          className={`relative max-w-[75%] shadow-md transition-all overflow-hidden bubble-wrapper ${
                             isMe
-                              ? "bg-indigo-600 text-white rounded-2xl rounded-tr-md"
-                              : "bg-white border border-gray-200 text-gray-900 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 rounded-2xl rounded-tl-md"
+                              ? "bg-indigo-600 text-white rounded-2xl rounded-tr-md shadow-indigo-500/30"
+                              : "bg-white border-2 border-gray-300 text-gray-900 dark:bg-slate-800 dark:border-slate-600 dark:text-gray-100 rounded-2xl rounded-tl-md"
                           }`}
                           style={{ borderRadius: "18px" }}
                         >
                           <div className="message-content relative z-0">
                             {msg.reply_to && (
                               <div
-                                className={`px-4 pt-2 pb-1 text-[10px] border-b ${isMe ? "border-indigo-500" : "border-gray-200 dark:border-slate-700"}`}
+                                className={`px-4 pt-2 pb-1 text-[10px] border-b ${isMe ? "border-indigo-500" : "border-gray-300 dark:border-slate-700"}`}
                               >
                                 <div className="flex items-center gap-1 mb-0.5">
                                   <Reply
@@ -1846,7 +1846,7 @@ const Room = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-gray-200 dark:border-slate-800 shrink-0">
+              <div className="p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-gray-300 dark:border-slate-800 shrink-0">
                 <AnimatePresence>
                   {replyingTo && (
                     <motion.div
@@ -1909,7 +1909,7 @@ const Room = () => {
                   onSubmit={handleSendMessage}
                   className="flex items-end gap-2"
                 >
-                  <div className="flex-1 bg-gray-100 dark:bg-slate-800 rounded-2xl flex items-center gap-2 px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
+                  <div className="flex-1 bg-gray-100 dark:bg-slate-800 rounded-2xl flex items-center gap-2 px-3 py-2 border-2 border-gray-300 dark:border-slate-700 focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -1961,7 +1961,7 @@ const Room = () => {
               <motion.div
                 animate={{ rotate: [0, 5, 0, -5, 0], scale: [1, 1.05, 1] }}
                 transition={{ duration: 6, repeat: Infinity }}
-                className="w-40 h-40 bg-white dark:bg-slate-800 rounded-[50px] flex items-center justify-center mb-6 shadow-2xl border-4 border-gray-200 dark:border-slate-700"
+                className="w-40 h-40 bg-white dark:bg-slate-800 rounded-[50px] flex items-center justify-center mb-6 shadow-2xl border-4 border-gray-300 dark:border-slate-700"
               >
                 <MessagesSquare
                   size={60}
