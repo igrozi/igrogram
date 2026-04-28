@@ -243,16 +243,21 @@ router.post('/:postId/comments', authenticate, async (req, res) => {
 // Удалить комментарий
 router.delete("/comments/:commentId", authenticate, async (req, res) => {
   const { commentId } = req.params;
-  const userId = req.userId; // 👈 должно быть получено из токена
+  const userId = req.userId;
+  
+  console.log(`🔍 DELETE COMMENT: commentId=${commentId}, userId=${userId}`);
   
   const client = await pool.connect();
   
   try {
     await client.query("BEGIN");
     
-    // Проверяем, что комментарий принадлежит пользователю
+    // Получаем комментарий и информацию о посте
     const comment = await client.query(
-      "SELECT post_id, author_id FROM comments WHERE id = $1",
+      `SELECT c.post_id, c.author_id, p.author_id as post_author_id 
+       FROM comments c
+       JOIN posts p ON c.post_id = p.id
+       WHERE c.id = $1`,
       [commentId]
     );
     
@@ -261,21 +266,34 @@ router.delete("/comments/:commentId", authenticate, async (req, res) => {
       return res.status(404).json({ message: "Comment not found" });
     }
     
-    // 👇 ВАЖНО: проверяем, что автор комментария — текущий пользователь
-    if (comment.rows[0].author_id !== userId) {
+    const commentAuthorId = comment.rows[0].author_id;
+    const postAuthorId = comment.rows[0].post_author_id;
+    
+    // Разрешаем удаление, если:
+    // 1. Пользователь — автор комментария
+    // 2. ИЛИ пользователь — автор поста
+    const isCommentAuthor = commentAuthorId === userId;
+    const isPostAuthor = postAuthorId === userId;
+    
+    if (!isCommentAuthor && !isPostAuthor) {
+      console.log(`❌ Unauthorized: user ${userId} is neither comment author nor post author`);
       await client.query("ROLLBACK");
-      return res.status(403).json({ message: "Unauthorized" }); // ← вот откуда 403
+      return res.status(403).json({ message: "Unauthorized" });
     }
     
+    console.log(`✅ Authorized: isCommentAuthor=${isCommentAuthor}, isPostAuthor=${isPostAuthor}`);
+    
+    // Удаляем комментарий
     await client.query("DELETE FROM comments WHERE id = $1", [commentId]);
     
+    // Обновляем счётчик комментариев у поста
     await client.query(
       "UPDATE posts SET comments_count = comments_count - 1 WHERE id = $1",
       [comment.rows[0].post_id]
     );
     
     await client.query("COMMIT");
-    res.json({ message: "Comment deleted" });
+    res.json({ message: "Comment deleted successfully" });
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Error in deleteComment:", error);
