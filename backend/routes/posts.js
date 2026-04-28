@@ -241,41 +241,44 @@ router.post('/:postId/comments', authenticate, async (req, res) => {
 });
 
 // Удалить комментарий
-router.delete('/comments/:commentId', authenticate, async (req, res) => {
+router.delete("/comments/:commentId", authenticate, async (req, res) => {
   const { commentId } = req.params;
-  const userId = req.userId;
+  const userId = req.userId; // 👈 должно быть получено из токена
   
   const client = await pool.connect();
   
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
     
+    // Проверяем, что комментарий принадлежит пользователю
     const comment = await client.query(
-      'SELECT post_id, author_id FROM comments WHERE id = $1',
+      "SELECT post_id, author_id FROM comments WHERE id = $1",
       [commentId]
     );
     
     if (comment.rows.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({ message: 'Comment not found' });
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "Comment not found" });
     }
     
+    // 👇 ВАЖНО: проверяем, что автор комментария — текущий пользователь
     if (comment.rows[0].author_id !== userId) {
-      await client.query('ROLLBACK');
-      return res.status(403).json({ message: 'Unauthorized' });
+      await client.query("ROLLBACK");
+      return res.status(403).json({ message: "Unauthorized" }); // ← вот откуда 403
     }
     
-    await client.query('DELETE FROM comments WHERE id = $1', [commentId]);
+    await client.query("DELETE FROM comments WHERE id = $1", [commentId]);
+    
     await client.query(
-      'UPDATE posts SET comments_count = comments_count - 1 WHERE id = $1',
+      "UPDATE posts SET comments_count = comments_count - 1 WHERE id = $1",
       [comment.rows[0].post_id]
     );
     
-    await client.query('COMMIT');
-    res.json({ message: 'Comment deleted' });
+    await client.query("COMMIT");
+    res.json({ message: "Comment deleted" });
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error in deleteComment:', error);
+    await client.query("ROLLBACK");
+    console.error("Error in deleteComment:", error);
     res.status(500).json({ error: error.message });
   } finally {
     client.release();
