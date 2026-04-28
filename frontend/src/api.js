@@ -182,9 +182,16 @@ export const api = {
   deleteComment: async (commentId, token) => {
     const response = await fetch(`${API_URL}/api/posts/comments/${commentId}`, {
       method: "DELETE",
-      headers: getHeaders(token),
+      headers: {
+        Authorization: `Bearer ${token}`, // 👈 проверьте, что token передаётся
+        "Content-Type": "application/json",
+      },
     });
-    if (!response.ok) throw new Error("Failed to delete comment");
+
+    if (!response.ok) {
+      throw new Error("Failed to delete comment");
+    }
+
     return response.json();
   },
 
