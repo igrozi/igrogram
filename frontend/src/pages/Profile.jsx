@@ -31,6 +31,12 @@ const formatLastSeen = (dateString) => {
   return `${date.toLocaleDateString('ru-RU', dateOptions)} в ${timeString}`;
 };
 
+// Компактный формат даты для мобильной версии
+const formatDateCompact = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' });
+};
+
 const formatDateWithTime = (dateString) => {
   return new Date(dateString).toLocaleString('ru-RU', { 
     day: 'numeric', 
@@ -214,6 +220,13 @@ const Profile = () => {
   const [isUpdatingBio, setIsUpdatingBio] = useState(false);
   const [ratingStats, setRatingStats] = useState({1: 0, 2: 0, 3: 0, 4: 0, 5: 0, total: 0, average: 0});
   const [darkMode, setDarkMode] = useState(localStorage.getItem('theme') === 'dark');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const isOwnProfile = useMemo(() => {
     return user && profile && user.user_id === profile.user_id;
@@ -281,7 +294,7 @@ const Profile = () => {
     }
   }, [username, navigate, user, token, fetchRatingStats]);
 
-  // Функция для обновления статистики без полной перезагрузки
+  // Обновление статистики после действий
   const updateStats = useCallback(async () => {
     if (!profile) return;
     
@@ -290,7 +303,7 @@ const Profile = () => {
       const updatedProfile = await api.getProfile(profile.username, token);
       setProfile(updatedProfile);
       
-      // Обновляем рейтинг (если это свой профиль)
+      // Обновляем рейтинг (только для своего профиля)
       if (isOwnProfile) {
         const { stats, total, average } = await fetchRatingStats(profile.user_id);
         setRatingStats({ ...stats, total, average });
@@ -590,6 +603,9 @@ const Profile = () => {
       setIsAddingComment(false);
     };
     
+    // Выбираем формат даты в зависимости от устройства
+    const postDate = isMobile ? formatDateCompact(post.created_at) : formatDateWithTime(post.created_at);
+    
     return (
       <div className={`p-4 sm:p-8 bg-gray-50 dark:bg-slate-800/20 border-2 ${isPinned ? 'border-yellow-500/60 bg-yellow-500/5' : 'border-gray-200 dark:border-slate-800/60'} rounded-[2rem] sm:rounded-[3rem] transition-all group shadow-sm hover:shadow-md`}>
         {isPinned && (
@@ -598,25 +614,25 @@ const Profile = () => {
             <span className="text-xs font-black uppercase tracking-wider">Закреплено</span>
           </div>
         )}
-        <div className="flex items-start gap-3 sm:gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-4">
           <img 
             src={actualAvatar || `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`} 
-            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm" 
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border-2 border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
             alt={post.author_name}
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = `https://ui-avatars.com/api/?name=${post.author_name}&background=4f46e5&color=fff&size=128`;
             }}
           />
-          <div className="flex-1">
-            <div className="flex justify-between items-start flex-wrap gap-2">
-              <div>
-                <h4 className="font-black text-lg sm:text-xl dark:text-white text-gray-900">{post.author_name}</h4>
-                <p className="text-indigo-600 dark:text-indigo-400 text-xs sm:text-sm font-bold">@{post.author_username}</p>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap justify-between items-start gap-2">
+              <div className="min-w-0">
+                <h4 className="font-black text-lg sm:text-xl dark:text-white text-gray-900 break-words">{post.author_name}</h4>
+                <p className="text-indigo-600 dark:text-indigo-400 text-xs sm:text-sm font-bold break-words">@{post.author_username}</p>
               </div>
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <span className="text-gray-500 dark:text-slate-500 text-[10px] sm:text-xs font-medium whitespace-nowrap">
-                  {formatDateWithTime(post.created_at)}
+                  {postDate}
                 </span>
                 {user && post.author_id === user.user_id && (
                   <>
@@ -633,13 +649,14 @@ const Profile = () => {
           </div>
         </div>
         
-        {post.content && <p className="dark:text-white text-gray-800 text-base sm:text-lg mb-6 whitespace-pre-wrap font-bold">{post.content}</p>}
+        {post.content && <p className="dark:text-white text-gray-800 text-base sm:text-lg mb-6 whitespace-pre-wrap font-bold break-words">{post.content}</p>}
         {post.image_url && (
           <div className="mb-6 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border-2 border-gray-200 dark:border-slate-700/50 shadow-md">
             <img 
               src={post.image_url} 
               alt="Прикрепленное медиа" 
               className="w-full h-auto object-cover max-h-[500px]"
+              loading="lazy"
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.style.display = 'none';
@@ -668,9 +685,9 @@ const Profile = () => {
         <AnimatePresence mode="wait">
           {isCommentsOpen && (
             <motion.div 
-              initial={{ opacity: 0, height: 0 }} 
-              animate={{ opacity: 1, height: 'auto' }} 
-              exit={{ opacity: 0, height: 0 }} 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
               className="mt-6 pt-6 border-t border-gray-200 dark:border-slate-700/50 overflow-hidden"
             >
@@ -691,7 +708,7 @@ const Profile = () => {
               )}
               
               {user && (
-                <div className="mb-6 flex flex-col sm:flex-row gap-3">
+                <div className="mb-6 flex gap-3">
                   <img 
                     src={currentUserProfile?.avatar_url || `https://ui-avatars.com/api/?name=${currentUserProfile?.name || 'User'}&background=4f46e5&color=fff&size=64`} 
                     className="w-10 h-10 rounded-xl object-cover border border-gray-300 dark:border-slate-700 shadow-sm flex-shrink-0" 
@@ -704,7 +721,7 @@ const Profile = () => {
                   <div className="flex-1 flex gap-2">
                     <input 
                       type="text" 
-                      placeholder={localReplyingTo ? `ОТВЕТ ${localReplyingTo.author_name.toUpperCase()}...` : "НАПИСАТЬ КОММЕНТАРИЙ..."} 
+                      placeholder={localReplyingTo ? `ОТВЕТ ${localReplyingTo.author_name.toUpperCase()}...` : "КОММЕНТАРИЙ..."} 
                       value={localCommentText} 
                       onChange={(e) => setLocalCommentText(e.target.value)} 
                       onKeyPress={(e) => { 
@@ -712,12 +729,12 @@ const Profile = () => {
                           handleAddCommentLocal();
                         } 
                       }} 
-                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-2.5 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-[10px] sm:placeholder:text-xs text-sm min-w-0" 
+                      className="flex-1 bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl px-4 py-2.5 dark:text-white text-gray-900 outline-none focus:border-indigo-500 transition-colors shadow-inner font-medium placeholder:font-black placeholder:uppercase placeholder:text-gray-400 placeholder:tracking-wider placeholder:text-[10px] text-sm min-w-0" 
                     />
                     <button 
                       onClick={handleAddCommentLocal}
                       disabled={isAddingComment}
-                      className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-xs sm:text-sm flex-shrink-0"
+                      className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md cursor-pointer disabled:opacity-50 uppercase text-xs flex-shrink-0"
                     >
                       {isAddingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                     </button>
@@ -728,6 +745,7 @@ const Profile = () => {
               <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar pr-2">
                 {(post.comments || []).map(comment => {
                   const isReply = comment.reply_to;
+                  const commentDate = isMobile ? formatDateCompact(comment.created_at) : formatDateWithTime(comment.created_at);
                   return (
                     <div key={comment.id} className={`flex gap-2 sm:gap-3 group ${isReply ? 'ml-4 sm:ml-8' : ''}`}>
                       <img 
@@ -740,7 +758,7 @@ const Profile = () => {
                         }}
                       />
                       <div className="flex-1 bg-gray-100 dark:bg-slate-800/30 rounded-xl p-3 border border-gray-200 dark:border-slate-700/30 shadow-sm">
-                        <div className="flex justify-between items-start mb-1 flex-wrap gap-1">
+                        <div className="flex flex-wrap justify-between items-start mb-1 gap-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-xs sm:text-sm dark:text-white text-gray-900">{comment.author_name}</span>
                             {comment.reply_to_author && (
@@ -751,7 +769,7 @@ const Profile = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-[8px] sm:text-[10px] text-gray-500 dark:text-slate-500 font-medium whitespace-nowrap">
-                              {formatDateWithTime(comment.created_at)}
+                              {commentDate}
                             </span>
                             {user && (comment.author_id === user.user_id || isOwnProfile) && (
                               <button onClick={() => handleDeleteComment(post.id, comment.id)} className="text-gray-400 dark:text-slate-500 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer" title="Удалить комментарий">
