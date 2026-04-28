@@ -180,16 +180,23 @@ export const api = {
   },
 
   deleteComment: async (commentId, token) => {
+    console.log("🔍 deleteComment called with commentId:", commentId);
+    console.log("🔍 token exists:", !!token);
+    
     const response = await fetch(`${API_URL}/api/posts/comments/${commentId}`, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${token}`, // 👈 проверьте, что token передаётся
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
-
+    
+    console.log("🔍 Response status:", response.status);
+    
     if (!response.ok) {
-      throw new Error("Failed to delete comment");
+      const errorData = await response.json().catch(() => ({}));
+      console.error("❌ Delete comment error:", errorData);
+      throw new Error(errorData.message || "Failed to delete comment");
     }
 
     return response.json();

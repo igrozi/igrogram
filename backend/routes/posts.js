@@ -1,323 +1,292 @@
-const API_URL = import.meta.env.VITE_API_URL || "https://igrogram-production.up.railway.app";
+import express from 'express';
+import { pool } from '../db/pool.js';
+import { authenticate } from '../middleware/auth.js';
 
-const getHeaders = (token) => {
-  const headers = {
-    "Content-Type": "application/json",
-  };
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+const router = express.Router();
+
+// Получить посты пользователя
+router.get('/user/:userId', authenticate, async (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    const posts = await pool.query(
+      `SELECT p.*, 
+              pr.avatar_url as current_avatar_url
+       FROM posts p
+       LEFT JOIN profiles pr ON p.author_id = pr.user_id
+       WHERE p.author_id = $1 
+       ORDER BY p.is_pinned DESC, p.pinned_at DESC NULLS LAST, p.created_at DESC
+       LIMIT 50`,
+      [userId]
+    );
+    
+    const postsWithComments = await Promise.all(
+      posts.rows.map(async (post) => {
+        const comments = await pool.query(
+          `SELECT c.*, 
+                  pr.avatar_url as current_author_avatar
+           FROM comments c
+           LEFT JOIN profiles pr ON c.author_id = pr.user_id
+           WHERE c.post_id = $1 
+           ORDER BY c.created_at ASC`,
+          [post.id]
+        );
+        
+        return { 
+          ...post, 
+          author_avatar: post.current_avatar_url || post.author_avatar,
+          comments: comments.rows.map(c => ({
+            ...c,
+            author_avatar: c.current_author_avatar || c.author_avatar
+          }))
+        };
+      })
+    );
+    
+    res.json(postsWithComments);
+  } catch (error) {
+    console.error('Error in getUserPosts:', error);
+    res.status(500).json([]);
   }
-  return headers;
-};
+});
 
-export const api = {
-  // ===== АВТОРИЗАЦИЯ =====
-  login: async (email, password) => {
-    const response = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, error: data.message || "Login failed" };
-    }
-    return { success: true, ...data };
-  },
-
-  register: async (userData) => {
-    const response = await fetch(`${API_URL}/api/auth/register`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify(userData),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, error: data.message || "Registration failed" };
-    }
-    return { success: true, ...data };
-  },
-
-  verify: async (token) => {
-    const response = await fetch(`${API_URL}/api/auth/verify`, {
-      headers: getHeaders(token),
-    });
-    if (!response.ok) {
-      return { success: false };
-    }
-    const data = await response.json();
-    return { success: true, ...data };
-  },
-
-  logout: async (userId, token) => {
-    const response = await fetch(`${API_URL}/api/auth/logout`, {
-      method: "POST",
-      headers: getHeaders(token),
-      body: JSON.stringify({ userId }),
-    });
-    return response.json();
-  },
-
-  // ===== ПРОФИЛИ ПОЛЬЗОВАТЕЛЕЙ =====
-  getUsers: async (token) => {
-    const response = await fetch(`${API_URL}/api/users`, {
-      headers: getHeaders(token),
-    });
-    if (!response.ok) return [];
-    return response.json();
-  },
-
-  getProfile: async (username, token) => {
-    const response = await fetch(`${API_URL}/api/users/profile/${username}`, {
-      headers: getHeaders(token),
-    });
-    if (!response.ok) return null;
-    return response.json();
-  },
-
-  updateProfile: async (profileData, token) => {
-    const response = await fetch(`${API_URL}/api/users/profile`, {
-      method: "PUT",
-      headers: getHeaders(token),
-      body: JSON.stringify(profileData),
-    });
-    if (!response.ok) throw new Error("Failed to update profile");
-    return response.json();
-  },
-
-  searchUsers: async (query, token) => {
-    const response = await fetch(`${API_URL}/api/users/search?q=${encodeURIComponent(query)}`, {
-      headers: getHeaders(token),
-    });
-    if (!response.ok) return [];
-    return response.json();
-  },
-
-  // ===== РЕЙТИНГ =====
-  rateUser: async (raterId, ratedUserId, score, token) => {
-    const response = await fetch(`${API_URL}/api/users/rate`, {
-      method: "POST",
-      headers: getHeaders(token),
-      body: JSON.stringify({ raterId, ratedUserId, score }),
-    });
-    return response.json();
-  },
-
-  getRatingStats: async (userId, token) => {
-    const response = await fetch(`${API_URL}/api/ratings/stats/${userId}`, {
-      headers: getHeaders(token),
-    });
-    if (!response.ok) {
-      return { stats: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, total: 0, average: 0 };
-    }
-    return response.json();
-  },
-
-  getVoters: async (userId, token) => {
-    const response = await fetch(`${API_URL}/api/ratings/voters/${userId}`, {
-      headers: getHeaders(token),
-    });
-    if (!response.ok) return [];
-    return response.json();
-  },
-
-  // ===== ПОСТЫ =====
-  getUserPosts: async (userId, token) => {
-    const response = await fetch(`${API_URL}/api/posts/user/${userId}`, {
-      headers: getHeaders(token),
-    });
-    if (!response.ok) return [];
-    return response.json();
-  },
-
-  createPost: async (postData, token) => {
-    const response = await fetch(`${API_URL}/api/posts`, {
-      method: "POST",
-      headers: getHeaders(token),
-      body: JSON.stringify(postData),
-    });
-    if (!response.ok) throw new Error("Failed to create post");
-    return response.json();
-  },
-
-  updatePost: async (postId, updateData, token) => {
-    const response = await fetch(`${API_URL}/api/posts/${postId}`, {
-      method: "PUT",
-      headers: getHeaders(token),
-      body: JSON.stringify(updateData),
-    });
-    if (!response.ok) throw new Error("Failed to update post");
-    return response.json();
-  },
-
-  deletePost: async (postId, token) => {
-    const response = await fetch(`${API_URL}/api/posts/${postId}`, {
-      method: "DELETE",
-      headers: getHeaders(token),
-    });
-    if (!response.ok) throw new Error("Failed to delete post");
-    return response.json();
-  },
-
-  likePost: async (postId, token) => {
-    const response = await fetch(`${API_URL}/api/posts/${postId}/like`, {
-      method: "POST",
-      headers: getHeaders(token),
-    });
-    if (!response.ok) throw new Error("Failed to like post");
-    return response.json();
-  },
-
-  // ===== КОММЕНТАРИИ =====
-  addComment: async (postId, commentData, token) => {
-    const response = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
-      method: "POST",
-      headers: getHeaders(token),
-      body: JSON.stringify(commentData),
-    });
-    if (!response.ok) throw new Error("Failed to add comment");
-    return response.json();
-  },
-
-  deleteComment: async (commentId, token) => {
-    console.log("🔍 deleteComment called with commentId:", commentId);
-    console.log("🔍 token exists:", !!token);
+// Создать пост
+router.post('/', authenticate, async (req, res) => {
+  const { authorId, authorName, authorUsername, authorAvatar, content, imageUrl } = req.body;
+  
+  try {
+    const profile = await pool.query(
+      'SELECT avatar_url FROM profiles WHERE user_id = $1',
+      [authorId]
+    );
     
-    const response = await fetch(`${API_URL}/api/posts/comments/${commentId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const currentAvatar = profile.rows[0]?.avatar_url || authorAvatar;
     
-    console.log("🔍 Response status:", response.status);
+    const result = await pool.query(
+      `INSERT INTO posts (author_id, author_name, author_username, author_avatar, content, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [authorId, authorName, authorUsername, currentAvatar, content, imageUrl]
+    );
+    res.status(201).json({ ...result.rows[0], comments: [] });
+  } catch (error) {
+    console.error('Error in createPost:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Обновить пост
+router.put('/:postId', authenticate, async (req, res) => {
+  const { postId } = req.params;
+  const { content, isPinned } = req.body;
+  const userId = req.userId;
+  
+  try {
+    const check = await pool.query(
+      'SELECT author_id FROM posts WHERE id = $1',
+      [postId]
+    );
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("❌ Delete comment error:", errorData);
-      throw new Error(errorData.message || "Failed to delete comment");
+    if (check.rows.length === 0 || check.rows[0].author_id !== userId) {
+      return res.status(403).json({ message: 'Unauthorized' });
     }
-
-    return response.json();
-  },
-
-  // ===== СООБЩЕНИЯ =====
-  getMessages: async (userId, token) => {
-    const response = await fetch(`${API_URL}/api/messages/${userId}`, {
-      headers: getHeaders(token),
-    });
-    if (!response.ok) return [];
-    return response.json();
-  },
-
-  sendMessage: async (messageData, token) => {
-    const response = await fetch(`${API_URL}/api/messages`, {
-      method: "POST",
-      headers: getHeaders(token),
-      body: JSON.stringify(messageData),
-    });
-    if (!response.ok) throw new Error("Failed to send message");
-    return response.json();
-  },
-
-  markMessagesAsRead: async (senderId, token) => {
-    const response = await fetch(`${API_URL}/api/messages/read/${senderId}`, {
-      method: "PUT",
-      headers: getHeaders(token),
-    });
-    if (!response.ok) throw new Error("Failed to mark messages as read");
-    return response.json();
-  },
-
-  deleteMessage: async (messageId, token) => {
-    const response = await fetch(`${API_URL}/api/messages/${messageId}`, {
-      method: "DELETE",
-      headers: getHeaders(token),
-    });
-    if (!response.ok) throw new Error("Failed to delete message");
-    return response.json();
-  },
-
-  getChats: async (token) => {
-    const response = await fetch(`${API_URL}/api/messages/chats/list`, {
-      headers: getHeaders(token),
-    });
-    if (!response.ok) return [];
-    return response.json();
-  },
-
-  // ===== ЗАГРУЗКА ФАЙЛОВ =====
-  uploadFile: async (file, type, token) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await fetch(`${API_URL}/api/upload?type=${type}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-    if (!response.ok) throw new Error("Failed to upload file");
-    return response.json();
-  },
-
-  // ===== УДАЛЕНИЕ АККАУНТА =====
-  verifyPassword: async (userId, password, token) => {
-    const response = await fetch(`${API_URL}/api/users/verify-password`, {
-      method: "POST",
-      headers: getHeaders(token),
-      body: JSON.stringify({ userId, password }),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to verify password");
+    
+    let updateFields = [];
+    let values = [];
+    let paramIndex = 1;
+    
+    if (content !== undefined) {
+      updateFields.push(`content = $${paramIndex}`);
+      values.push(content);
+      paramIndex++;
     }
-    return response.json();
-  },
-
-  deleteAccount: async (userId, token) => {
-    const response = await fetch(`${API_URL}/api/users/${userId}`, {
-      method: "DELETE",
-      headers: getHeaders(token),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to delete account");
+    
+    if (isPinned !== undefined) {
+      updateFields.push(`is_pinned = $${paramIndex}`);
+      values.push(isPinned);
+      paramIndex++;
+      
+      if (isPinned) {
+        updateFields.push(`pinned_at = $${paramIndex}`);
+        values.push(new Date().toISOString());
+        paramIndex++;
+      } else {
+        updateFields.push(`pinned_at = $${paramIndex}`);
+        values.push(null);
+        paramIndex++;
+      }
     }
-    return response.json();
-  },
-
-  // ===== СМЕНА ПАРОЛЯ =====
-  changePassword: async (passwordData, token) => {
-    const response = await fetch(`${API_URL}/api/users/change-password`, {
-      method: "PUT",
-      headers: getHeaders(token),
-      body: JSON.stringify(passwordData),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to change password");
+    
+    if (updateFields.length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
     }
-    return response.json();
-  },
+    
+    values.push(postId);
+    
+    const result = await pool.query(
+      `UPDATE posts 
+       SET ${updateFields.join(', ')}
+       WHERE id = $${paramIndex}
+       RETURNING *`,
+      values
+    );
+    
+    const profile = await pool.query(
+      'SELECT avatar_url FROM profiles WHERE user_id = $1',
+      [result.rows[0].author_id]
+    );
+    
+    const response = {
+      ...result.rows[0],
+      author_avatar: profile.rows[0]?.avatar_url || result.rows[0].author_avatar
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Error in updatePost:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-  // ===== ПРОВЕРКА USERNAME =====
-  checkUsername: async (username) => {
-    try {
-      const response = await fetch(`${API_URL}/api/users/check-username/${username}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      const data = await response.json();
-      return { available: data.available, message: data.message };
-    } catch (error) {
-      console.error('Username check error:', error);
-      return { available: true, message: "Available" };
+// Удалить пост
+router.delete('/:postId', authenticate, async (req, res) => {
+  const { postId } = req.params;
+  const userId = req.userId;
+  
+  try {
+    const result = await pool.query(
+      'DELETE FROM posts WHERE id = $1 AND author_id = $2 RETURNING id',
+      [postId, userId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Post not found' });
     }
-  },
-};
+    
+    res.json({ message: 'Post deleted' });
+  } catch (error) {
+    console.error('Error in deletePost:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-export default api;
+// Лайкнуть/убрать лайк
+router.post('/:postId/like', authenticate, async (req, res) => {
+  const { postId } = req.params;
+  const userId = req.userId;
+  
+  try {
+    const post = await pool.query('SELECT likes FROM posts WHERE id = $1', [postId]);
+    const currentLikes = post.rows[0]?.likes || [];
+    const hasLiked = currentLikes.includes(userId);
+    
+    const newLikes = hasLiked 
+      ? currentLikes.filter(id => id !== userId)
+      : [...currentLikes, userId];
+    
+    await pool.query('UPDATE posts SET likes = $1 WHERE id = $2', [newLikes, postId]);
+    res.json({ likes: newLikes, hasLiked: !hasLiked });
+  } catch (error) {
+    console.error('Error in likePost:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Добавить комментарий
+router.post('/:postId/comments', authenticate, async (req, res) => {
+  const { postId } = req.params;
+  const { authorId, authorName, authorAvatar, content, replyToId, replyToAuthor } = req.body;
+  
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+    
+    const profile = await client.query(
+      'SELECT avatar_url FROM profiles WHERE user_id = $1',
+      [authorId]
+    );
+    
+    const currentAvatar = profile.rows[0]?.avatar_url || authorAvatar;
+    
+    const result = await client.query(
+      `INSERT INTO comments (post_id, author_id, author_name, author_avatar, content, reply_to, reply_to_author)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [postId, authorId, authorName, currentAvatar, content, replyToId, replyToAuthor]
+    );
+    
+    await client.query(
+      'UPDATE posts SET comments_count = comments_count + 1 WHERE id = $1',
+      [postId]
+    );
+    
+    await client.query('COMMIT');
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error in addComment:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// УДАЛЕНИЕ КОММЕНТАРИЯ — ИСПРАВЛЕННАЯ ВЕРСИЯ (владелец поста может удалять)
+router.delete('/comments/:commentId', authenticate, async (req, res) => {
+  const { commentId } = req.params;
+  const userId = req.userId;
+  
+  console.log(`🔍 DELETE COMMENT: commentId=${commentId}, userId=${userId}`);
+  
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+    
+    const comment = await client.query(
+      `SELECT c.post_id, c.author_id, p.author_id as post_author_id 
+       FROM comments c
+       JOIN posts p ON c.post_id = p.id
+       WHERE c.id = $1`,
+      [commentId]
+    );
+    
+    if (comment.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+    
+    const commentAuthorId = comment.rows[0].author_id;
+    const postAuthorId = comment.rows[0].post_author_id;
+    
+    const isCommentAuthor = commentAuthorId === userId;
+    const isPostAuthor = postAuthorId === userId;
+    
+    if (!isCommentAuthor && !isPostAuthor) {
+      console.log(`❌ Unauthorized: user ${userId} is neither comment author nor post author`);
+      await client.query('ROLLBACK');
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+    
+    console.log(`✅ Authorized: isCommentAuthor=${isCommentAuthor}, isPostAuthor=${isPostAuthor}`);
+    
+    await client.query('DELETE FROM comments WHERE id = $1', [commentId]);
+    
+    await client.query(
+      'UPDATE posts SET comments_count = comments_count - 1 WHERE id = $1',
+      [comment.rows[0].post_id]
+    );
+    
+    await client.query('COMMIT');
+    res.json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error in deleteComment:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+export default router;
