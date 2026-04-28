@@ -21,7 +21,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Создаём папки для загрузок
+// Создаём папки для загрузок (с полными правами)
 const uploadDirs = [
   "uploads",
   "uploads/avatars",
@@ -31,7 +31,7 @@ const uploadDirs = [
 uploadDirs.forEach((dir) => {
   const fullPath = path.join(__dirname, dir);
   if (!fs.existsSync(fullPath)) {
-    fs.mkdirSync(fullPath, { recursive: true });
+    fs.mkdirSync(fullPath, { recursive: true, mode: 0o755 });
     console.log(`📁 Created: ${fullPath}`);
   }
 });
@@ -80,7 +80,13 @@ app.use(
 
 app.use(express.json());
 
-// ----- СТАТИЧЕСКИЕ ФАЙЛЫ С ПРАВИЛЬНЫМИ ЗАГОЛОВКАМИ ДЛЯ ИЗОБРАЖЕНИЙ -----
+// ----- СТАТИЧЕСКИЕ ФАЙЛЫ ДЛЯ ИЗОБРАЖЕНИЙ (ИСПРАВЛЕНО) -----
+// Сначала проверяем, существует ли папка uploads
+const uploadsPath = path.join(__dirname, "uploads");
+console.log(`📁 Uploads path: ${uploadsPath}`);
+console.log(`📁 Uploads exists: ${fs.existsSync(uploadsPath)}`);
+
+// Middleware для CORS на статические файлы
 app.use("/uploads", (req, res, next) => {
   const origin = req.headers.origin;
   if (origin) {
@@ -88,16 +94,13 @@ app.use("/uploads", (req, res, next) => {
   } else {
     res.setHeader("Access-Control-Allow-Origin", "*");
   }
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
-  
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
   next();
-}, express.static(path.join(__dirname, "uploads"), {
+});
+
+// Раздача статических файлов с правильными заголовками
+app.use("/uploads", express.static(uploadsPath, {
   setHeaders: (res, filePath, stat) => {
     if (filePath.match(/\.(jpg|jpeg)$/i)) {
       res.setHeader("Content-Type", "image/jpeg");
@@ -132,7 +135,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Проверка username (добавляем сюда для удобства)
+// Проверка username
 app.get("/api/users/check-username/:username", async (req, res) => {
   const { username } = req.params;
   try {
@@ -148,6 +151,15 @@ app.get("/api/users/check-username/:username", async (req, res) => {
     console.error("Error checking username:", error);
     res.status(500).json({ available: false, message: "Server error" });
   }
+});
+
+// Тестовый эндпоинт для проверки статических файлов
+app.get("/uploads-test", (req, res) => {
+  res.json({
+    uploadsPath: uploadsPath,
+    exists: fs.existsSync(uploadsPath),
+    files: fs.existsSync(uploadsPath) ? fs.readdirSync(uploadsPath) : []
+  });
 });
 
 // 404
@@ -230,5 +242,6 @@ const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, "0.0.0.0", async () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`✅ CORS_ORIGIN = ${process.env.CORS_ORIGIN || "not set"}`);
+  console.log(`✅ Uploads path: ${uploadsPath}`);
   await initDatabase();
 });
